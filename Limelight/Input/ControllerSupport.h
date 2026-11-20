@@ -25,6 +25,7 @@
 -(void) connectionEstablished;
 
 -(void) initAutoOnScreenControlMode:(OnScreenControls*)osc;
+-(void)setOnScreenControlsEnabled:(BOOL)enabled;
 -(void) cleanup;
 -(Controller*) getOscController;
 

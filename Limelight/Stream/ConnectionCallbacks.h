@@ -22,4 +22,7 @@
 - (void) setControllerLed:(uint16_t)controllerNumber r:(uint8_t)r g:(uint8_t)g b:(uint8_t)b;
 - (void) videoContentShown;
 
+@optional
+- (void)videoSizeChangedWithWidth:(int)width height:(int)height;
+
 @end

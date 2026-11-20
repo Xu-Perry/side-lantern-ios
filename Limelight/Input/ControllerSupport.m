@@ -971,6 +971,10 @@ static const double MOUSE_SPEED_DIVISOR = 1.25;
     [self updateAutoOnScreenControlMode];
 }
 
+-(void)setOnScreenControlsEnabled:(BOOL)enabled {
+    _oscEnabled = enabled;
+}
+
 -(Controller*) assignController:(GCController*)controller {
     for (int i = 0; i < 4; i++) {
         if (!(_controllerNumbers & (1 << i))) {

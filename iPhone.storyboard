@@ -39,11 +39,9 @@
                     </collectionView>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" id="pSu-bl-gL9">
-                        <barButtonItem key="leftBarButtonItem" title="Settings" id="mSL-ru-nRm"/>
                         <barButtonItem key="rightBarButtonItem" id="KDy-JC-2sU"/>
                     </navigationItem>
                     <connections>
-                        <outlet property="settingsButton" destination="mSL-ru-nRm" id="NRf-lv-vlh"/>
                         <outlet property="upButton" destination="KDy-JC-2sU" id="tXB-Rc-IvJ"/>
                         <segue destination="mI3-9F-XwU" kind="push" identifier="createStreamFrame" id="NuQ-Ez-IEX"/>
                     </connections>
@@ -66,7 +64,6 @@
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     </view>
                     <connections>
-                        <segue destination="rYd-e6-cQU" kind="custom" identifier="sw_rear" customClass="SWRevealViewControllerSegueSetController" id="vBQ-bn-yZu"/>
                         <segue destination="ftZ-kC-fxI" kind="custom" identifier="sw_front" customClass="SWRevealViewControllerSegueSetController" id="V3E-d5-bsZ"/>
                     </connections>
                 </viewController>
@@ -77,7 +74,7 @@
         <!--Side Bar-->
         <scene sceneID="uYM-56-Ivb">
             <objects>
-                <viewController id="rYd-e6-cQU" userLabel="Side Bar" customClass="SettingsViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="settingsFrame" id="rYd-e6-cQU" userLabel="Side Bar" customClass="SettingsViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="TeT-8j-xwM"/>
                         <viewControllerLayoutGuide type="bottom" id="HaZ-6S-ZpN"/>
@@ -385,7 +382,7 @@
         <!--Stream Frame View Controller-->
         <scene sceneID="5Eb-q2-vjt">
             <objects>
-                <viewController id="mI3-9F-XwU" customClass="StreamFrameViewController" sceneMemberID="viewController">
+                <viewController id="mI3-9F-XwU" storyboardIdentifier="streamFrame" customClass="StreamFrameViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="u8d-aX-gHk"/>
                         <viewControllerLayoutGuide type="bottom" id="kcN-yf-dtN"/>

@@ -37,6 +37,8 @@
 - (void) removeApp:(TemporaryApp*)app;
 
 - (TemporarySettings*) getSettings;
+- (void)saveVideoWidth:(NSNumber *)width height:(NSNumber *)height framerate:(NSNumber *)framerate bitrate:(NSNumber *)bitrate;
+- (void)saveLiveControls:(NSNumber *)controls statistics:(NSNumber *)statistics;
 
 - (void) updateUniqueId:(NSString*)uniqueId;
 - (NSString*) getUniqueId;

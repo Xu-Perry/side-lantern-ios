@@ -7,13 +7,38 @@
 //
 
 #import "Utils.h"
+#import "IdManager.h"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
 
 @implementation Utils
-NSString *const deviceName = @"roth";
+
++ (NSString*) deviceName {
+#if TARGET_OS_SIMULATOR
+    NSString* simulatorName = [NSProcessInfo.processInfo.environment[@"SIMULATOR_DEVICE_NAME"] trim];
+    if (simulatorName.length > 0) {
+        return simulatorName;
+    }
+#endif
+
+    UIDevice* device = UIDevice.currentDevice;
+    NSString* name = [device.name trim];
+    NSString* model = [device.model trim];
+    NSString* localizedModel = [device.localizedModel trim];
+    // Since iOS 16, devices without the user-assigned-name entitlement return
+    // a generic model name. Use the existing local identity to distinguish them.
+    NSSet<NSString*>* genericNames = [NSSet setWithObjects:@"iPhone", @"iPad", @"iPod touch", @"Apple TV", @"iOS", nil];
+    if (name.length > 0 && ![name isEqualToString:model] &&
+        ![name isEqualToString:localizedModel] && ![genericNames containsObject:name]) {
+        return name;
+    }
+
+    NSString* uniqueId = [IdManager getUniqueId];
+    NSString* shortId = [[uniqueId substringToIndex:MIN(6, uniqueId.length)] uppercaseString];
+    return [NSString stringWithFormat:@"%@-%@", model.length > 0 ? model : @"iOS", shortId];
+}
 
 + (NSData*) randomBytes:(NSInteger)length {
     char* bytes = malloc(length);

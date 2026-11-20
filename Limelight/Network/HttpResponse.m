@@ -7,7 +7,6 @@
 //
 
 #import "HttpResponse.h"
-#import "TemporaryApp.h"
 #import <libxml2/libxml/xmlreader.h>
 
 @implementation HttpResponse {

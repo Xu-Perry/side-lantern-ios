@@ -6,6 +6,8 @@
 //  Copyright (c) 2015 Moonlight Stream. All rights reserved.
 //
 
+#import <Foundation/Foundation.h>
+
 static NSString* TAG_STATUS_CODE = @"status_code";
 static NSString* TAG_STATUS_MESSAGE = @"status_message";
 
@@ -20,6 +22,8 @@ static NSString* TAG_STATUS_MESSAGE = @"status_message";
 @end
 
 @interface HttpResponse : NSObject <Response>
+
+@property (nonatomic) NSInteger httpStatusCode;
 
 - (void) populateWithData:(NSData*)data;
 - (void) parseData;

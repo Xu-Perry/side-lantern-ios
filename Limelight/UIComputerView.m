@@ -52,6 +52,12 @@ static const int LABEL_DY = 20;
     
     _hostLabel = [[UILabel alloc] init];
     _hostLabel.textColor = [UIColor whiteColor];
+#if !TARGET_OS_TV
+    _hostLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    _hostLabel.adjustsFontForContentSizeCategory = YES;
+    _hostLabel.numberOfLines = 2;
+    _hostLabel.textAlignment = NSTextAlignmentCenter;
+#endif
     
     _hostOverlay = [[UIImageView alloc] initWithFrame:CGRectMake(self.frame.size.width / 3, _hostIcon.frame.size.height / 4, _hostIcon.frame.size.width / 3, self.frame.size.height / 3)];
     _hostSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
@@ -105,6 +111,9 @@ static const int LABEL_DY = 20;
     [self addTarget:self action:@selector(addClicked) forControlEvents:UIControlEventPrimaryActionTriggered];
     
     [_hostLabel setText:@"Add Host Manually"];
+#if !TARGET_OS_TV
+    _hostLabel.text = NSLocalizedStringFromTable(@"hosts.add", @"StreamTarget", nil);
+#endif
     [_hostLabel sizeToFit];
     
     [_hostOverlay setImage:[UIImage imageNamed:@"AddOverlayIcon"]];
@@ -148,6 +157,14 @@ static const int LABEL_DY = 20;
 }
 
 - (void) updateBounds {
+#if !TARGET_OS_TV
+    CGFloat labelWidth = MAX(160, _hostIcon.bounds.size.width);
+    CGSize labelSize = [_hostLabel sizeThatFits:CGSizeMake(labelWidth, CGFLOAT_MAX)];
+    _hostLabel.bounds = CGRectMake(0, 0, labelWidth, labelSize.height);
+    self.isAccessibilityElement = YES;
+    self.accessibilityLabel = _hostLabel.text;
+    self.accessibilityIdentifier = _host == nil ? @"add-host" : _host.uuid;
+#endif
     float x = FLT_MAX;
     float y = FLT_MAX;
     float width = 0;

@@ -8,8 +8,10 @@
 
 #import <UIKit/UIKit.h>
 #import "AppDelegate.h"
+#import "ManualVideoSettings.h"
+@class TemporaryHost;
 
-@interface SettingsViewController : UIViewController
+@interface SettingsViewController : UIViewController <UIAdaptivePresentationControllerDelegate>
 @property (strong, nonatomic) IBOutlet UILabel *bitrateLabel;
 @property (strong, nonatomic) IBOutlet UISlider *bitrateSlider;
 @property (strong, nonatomic) IBOutlet UISegmentedControl *framerateSelector;
@@ -37,5 +39,13 @@
 #pragma clang diagnostic pop
 
 - (void) saveSettings;
+- (void)configureStreamTargetsForHost:(TemporaryHost *)host;
+@property (nonatomic) BOOL streaming;
+@property (nonatomic) BOOL onScreenControlsAvailable;
+@property (nonatomic) BOOL usesFullBounds;
+@property (nonatomic, copy) void (^closeHandler)(void);
+@property (nonatomic, copy) void (^changeHandler)(void);
+@property (nonatomic, copy) void (^videoSettingsChanged)(ManualVideoSettings *settings, ManualVideoFields fields);
+- (void)updateManualVideoSettings:(ManualVideoSettings *)settings available:(BOOL)available updating:(BOOL)updating message:(NSString *)message;
 
 @end

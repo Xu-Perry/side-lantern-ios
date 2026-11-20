@@ -129,6 +129,8 @@ void DrStop(void)
     }
 }
 
+- (void)updateVideoFrameRate:(int)frameRate { [renderer updateFrameRate:frameRate]; }
+
 int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 {
     int offset = 0;

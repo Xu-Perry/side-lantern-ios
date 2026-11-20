@@ -108,6 +108,26 @@
     }];
 }
 
+- (void)saveVideoWidth:(NSNumber *)width height:(NSNumber *)height framerate:(NSNumber *)framerate bitrate:(NSNumber *)bitrate {
+    [_managedObjectContext performBlockAndWait:^{
+        Settings *settings = [self retrieveSettings];
+        if (width) settings.width = width;
+        if (height) settings.height = height;
+        if (framerate) settings.framerate = framerate;
+        if (bitrate) settings.bitrate = bitrate;
+        [self saveData];
+    }];
+}
+
+- (void)saveLiveControls:(NSNumber *)controls statistics:(NSNumber *)statistics {
+    [_managedObjectContext performBlockAndWait:^{
+        Settings *settings = [self retrieveSettings];
+        if (controls) settings.onscreenControls = controls;
+        if (statistics) settings.statsOverlay = statistics.boolValue;
+        [self saveData];
+    }];
+}
+
 - (void) updateAppsForExistingHost:(TemporaryHost *)host {
     [_managedObjectContext performBlockAndWait:^{
         Host* parent = [self getHostForTemporaryHost:host withHostRecords:[self fetchRecords:@"Host"]];

@@ -7,6 +7,7 @@
 //
 
 #import "StreamManager.h"
+#import "StreamModesResponse.h"
 #import "CryptoManager.h"
 #import "HttpManager.h"
 #import "Utils.h"
@@ -79,6 +80,26 @@
     // Populate the config's version fields from serverinfo
     _config.appVersion = appversion;
     _config.gfeVersion = gfeVersion;
+
+    if (_config.sideLanternMode != nil) {
+        StreamModesResponse *modes = [[StreamModesResponse alloc] init];
+        [hMan executeRequestSynchronously:[HttpRequest requestForResponse:modes withUrlRequest:[hMan newStreamModesRequest]]];
+        if (!modes.supportsDisplayModes) {
+            if (modes.isLegacyHost && [_config.sideLanternMode isEqualToString:@"primary"]) {
+                // Preserve normal GameStream on hosts without explicit display selection.
+                _config.sideLanternMode = nil;
+            }
+            else {
+                [_callbacks launchFailed:NSLocalizedStringFromTable(modes.isLegacyHost ? @"target.legacy" : @"target.error.discovery", @"StreamTarget", nil)];
+                return;
+            }
+        }
+        else if (![modes isModeAvailable:_config.sideLanternMode]) {
+            [_callbacks launchFailed:StreamModeFailureMessage([modes reasonForMode:_config.sideLanternMode])];
+            return;
+        }
+        _config.manualVideoEnabled = _config.sideLanternMode != nil && modes.supportsManualVideo;
+    }
     
     // resumeApp and launchApp handle calling launchFailed
     NSString* sessionUrl;
@@ -111,12 +132,19 @@
     [_connection terminate];
 }
 
+- (void)updateVideoFrameRate:(int)frameRate bitrate:(int)bitrate {
+    _config.frameRate = frameRate;
+    _config.bitRate = bitrate;
+    [_connection updateVideoFrameRate:frameRate];
+}
+
 - (BOOL) launchApp:(HttpManager*)hMan receiveSessionUrl:(NSString**)sessionUrl {
     HttpResponse* launchResp = [[HttpResponse alloc] init];
     [hMan executeRequestSynchronously:[HttpRequest requestForResponse:launchResp withUrlRequest:[hMan newLaunchOrResumeRequest:@"launch" config:_config]]];
     NSString *gameSession = [launchResp getStringTag:@"gamesession"];
     if (![launchResp isStatusOk]) {
-        [_callbacks launchFailed:launchResp.statusMessage];
+        NSString *reason = [launchResp getStringTag:@"sidelantern_reason"];
+        [_callbacks launchFailed:reason.length > 0 ? StreamModeFailureMessage(reason) : launchResp.statusMessage];
         Log(LOG_E, @"Failed Launch Response: %@", launchResp.statusMessage);
         return FALSE;
     } else if (gameSession == NULL || [gameSession isEqualToString:@"0"]) {
@@ -134,7 +162,8 @@
     [hMan executeRequestSynchronously:[HttpRequest requestForResponse:resumeResp withUrlRequest:[hMan newLaunchOrResumeRequest:@"resume" config:_config]]];
     NSString* resume = [resumeResp getStringTag:@"resume"];
     if (![resumeResp isStatusOk]) {
-        [_callbacks launchFailed:resumeResp.statusMessage];
+        NSString *reason = [resumeResp getStringTag:@"sidelantern_reason"];
+        [_callbacks launchFailed:reason.length > 0 ? StreamModeFailureMessage(reason) : resumeResp.statusMessage];
         Log(LOG_E, @"Failed Resume Response: %@", resumeResp.statusMessage);
         return FALSE;
     } else if (resume == NULL || [resume isEqualToString:@"0"]) {

@@ -7,6 +7,7 @@
 //
 
 #import "HttpManager.h"
+#import "ManualVideoSettings.h"
 #import "HttpRequest.h"
 #import "CryptoManager.h"
 #import "TemporaryApp.h"
@@ -26,7 +27,7 @@
     NSString* _urlSafeHostName;
     NSString* _baseHTTPURL;
     NSString* _uniqueId;
-    NSString* _deviceName;
+    NSString* _urlSafeDeviceName;
     NSData* _serverCert;
     
     TemporaryHost *_host; // May be nil
@@ -55,7 +56,8 @@
     // Use the same UID for all Moonlight clients to allow them
     // quit games started on another Moonlight client.
     _uniqueId = @"0123456789ABCDEF";
-    _deviceName = deviceName;
+    NSCharacterSet* queryValueCharacters = [NSCharacterSet characterSetWithCharactersInString:@"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"];
+    _urlSafeDeviceName = [[Utils deviceName] stringByAddingPercentEncodingWithAllowedCharacters:queryValueCharacters];
     _serverCert = serverCert;
     
     NSString* address = [Utils addressPortStringToAddress:hostAddressPortString];
@@ -118,6 +120,7 @@
 
     __block NSData* requestResp = nil;
     __block NSError* respError = nil;
+    __block NSInteger httpStatusCode = 0;
     __block dispatch_semaphore_t requestLock = dispatch_semaphore_create(0);
     
     Log(LOG_D, @"Making Request: %@", request);
@@ -129,6 +132,9 @@
             respError = error;
         }
         else {
+            if ([response isKindOfClass:NSHTTPURLResponse.class]) {
+                httpStatusCode = [(NSHTTPURLResponse *)response statusCode];
+            }
             Log(LOG_D, @"Received response: %@", response);
 
             if (data != NULL) {
@@ -149,6 +155,9 @@
     
     if (!respError && request.response) {
         [request.response populateWithData:requestResp];
+        if ([request.response isKindOfClass:HttpResponse.class]) {
+            [(HttpResponse *)request.response setHttpStatusCode:httpStatusCode];
+        }
         
         // If the fallback error code was detected, issue the fallback request
         if (request.response.statusCode == request.fallbackError && request.fallbackRequest != NULL) {
@@ -189,7 +198,7 @@
 
 - (NSURLRequest*) newPairRequest:(NSData*)salt clientCert:(NSData*)clientCert {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=getservercert&salt=%@&clientcert=%@",
-                           _baseHTTPURL, _uniqueId, _deviceName, [self bytesToHex:salt], [self bytesToHex:clientCert]];
+                           _baseHTTPURL, _uniqueId, _urlSafeDeviceName, [self bytesToHex:salt], [self bytesToHex:clientCert]];
     // This call blocks while waiting for the user to input the PIN on the PC
     return [self createRequestFromString:urlString timeout:EXTRA_LONG_TIMEOUT_SEC];
 }
@@ -201,18 +210,18 @@
 
 - (NSURLRequest*) newChallengeRequest:(NSData*)challenge {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&clientchallenge=%@",
-                           _baseHTTPURL, _uniqueId, _deviceName, [self bytesToHex:challenge]];
+                           _baseHTTPURL, _uniqueId, _urlSafeDeviceName, [self bytesToHex:challenge]];
     return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newChallengeRespRequest:(NSData*)challengeResp {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&serverchallengeresp=%@",
-                           _baseHTTPURL, _uniqueId, _deviceName, [self bytesToHex:challengeResp]];
+                           _baseHTTPURL, _uniqueId, _urlSafeDeviceName, [self bytesToHex:challengeResp]];
     return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newClientSecretRespRequest:(NSString*)clientPairSecret {
-    NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&clientpairingsecret=%@", _baseHTTPURL, _uniqueId, _deviceName, clientPairSecret];
+    NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&clientpairingsecret=%@", _baseHTTPURL, _uniqueId, _urlSafeDeviceName, clientPairSecret];
     return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
@@ -221,7 +230,7 @@
         return nil;
     }
     
-    NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=pairchallenge", _baseHTTPSURL, _uniqueId, _deviceName];
+    NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=pairchallenge", _baseHTTPSURL, _uniqueId, _urlSafeDeviceName];
     return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
@@ -232,6 +241,19 @@
     
     NSString* urlString = [NSString stringWithFormat:@"%@/applist?uniqueid=%@", _baseHTTPSURL, _uniqueId];
     return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
+}
+
+- (NSURLRequest *)newStreamModesRequest {
+    if (_serverCert == nil || ![self ensureHttpsUrlPopulated:NO]) {
+        return nil;
+    }
+    NSString *url = [NSString stringWithFormat:@"%@/sidelantern/v1/stream-modes", _baseHTTPSURL];
+    return [self createRequestFromString:url timeout:NORMAL_TIMEOUT_SEC];
+}
+
+- (NSURLRequest *)newManualVideoRequestForSession:(NSString *)sessionIdentifier settings:(ManualVideoSettings *)settings {
+    if (_serverCert == nil || ![self ensureHttpsUrlPopulated:NO]) return nil;
+    return ManualVideoRequest([NSURL URLWithString:_baseHTTPSURL], sessionIdentifier, settings);
 }
 
 - (NSURLRequest *)newServerInfoRequest:(bool)fastFail {
@@ -281,6 +303,14 @@
                            config.gamepadMask, config.gamepadMask,
                            !config.multiController ? 1 : 0,
                            LiGetLaunchUrlQueryParameters()];
+    if (config.sideLanternMode != nil) {
+        NSURLComponents *components = [NSURLComponents componentsWithString:urlString];
+        NSMutableArray<NSURLQueryItem *> *items = [components.queryItems mutableCopy];
+        [items addObject:[NSURLQueryItem queryItemWithName:@"sidelantern_mode" value:config.sideLanternMode]];
+        if (config.manualVideoEnabled) [items addObject:[NSURLQueryItem queryItemWithName:@"sidelantern_manual_video" value:@"1"]];
+        components.queryItems = items;
+        urlString = components.URL.absoluteString;
+    }
     Log(LOG_I, @"Requesting: %@", urlString);
     // This blocks while the app is launching
     return [self createRequestFromString:urlString timeout:LONG_TIMEOUT_SEC];

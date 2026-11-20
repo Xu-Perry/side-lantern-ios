@@ -28,6 +28,7 @@
 #import "ConnectionHelper.h"
 
 #if !TARGET_OS_TV
+#import "StreamModesResponse.h"
 #import "SettingsViewController.h"
 #else
 #import <sys/utsname.h>
@@ -49,6 +50,8 @@
     UIAlertController* _pairAlert;
     LoadingFrameViewController* _loadingFrame;
     UIScrollView* hostScrollView;
+    UILabel *_hostDiscoveryLabel;
+    CGSize _hostLayoutSize;
     FrontViewPosition currentPosition;
     NSArray* _sortedAppList;
     NSCache* _boxArtCache;
@@ -118,25 +121,35 @@ static NSMutableSet* hostList;
 
 - (void)disableUpButton {
 #if !TARGET_OS_TV
-    [self->_upButton setTitle:nil];
+    self.navigationItem.rightBarButtonItem = nil;
 #endif
 }
 
 - (void)enableUpButton {
 #if !TARGET_OS_TV
-    [self->_upButton setTitle:@"Select New Host"];
+    self->_upButton.title = NSLocalizedStringFromTable(@"hosts.choose", @"StreamTarget", nil);
+    self.navigationItem.rightBarButtonItem = self->_upButton;
 #endif
 }
+
+#if !TARGET_OS_TV
+- (void)openStreamSettings {
+    if (self.navigationController.topViewController != self) return;
+    SettingsViewController *settings = [self.storyboard instantiateViewControllerWithIdentifier:@"settingsFrame"];
+    [settings configureStreamTargetsForHost:_selectedHost];
+    [self.navigationController pushViewController:settings animated:YES];
+}
+#endif
 
 - (void)updateTitle {
     if (_selectedHost != nil) {
         self.title = _selectedHost.name;
     }
     else if ([hostList count] == 0) {
-        self.title = @"Searching for PCs on your network...";
+        self.title = @"SideLantern";
     }
     else {
-        self.title = @"Select Host";
+        self.title = NSLocalizedStringFromTable(@"hosts.choose", @"StreamTarget", nil);
     }
 }
 
@@ -604,15 +617,20 @@ static NSMutableSet* hostList;
 - (void) prepareToStreamApp:(TemporaryApp *)app {
     _streamConfig = [[StreamConfiguration alloc] init];
     _streamConfig.host = app.host.activeAddress;
+    _streamConfig.settingsHost = app.host;
     _streamConfig.httpsPort = app.host.httpsPort;
     _streamConfig.appID = app.id;
     _streamConfig.appName = app.name;
     _streamConfig.serverCert = app.host.serverCert;
+#if !TARGET_OS_TV
+    _streamConfig.sideLanternMode = StreamModeIdentifierForTarget([[[StreamTargetPreferences alloc] init] selectedTarget]);
+#endif
     
     DataManager* dataMan = [[DataManager alloc] init];
     TemporarySettings* streamSettings = [dataMan getSettings];
     
     _streamConfig.frameRate = [streamSettings.framerate intValue];
+#if TARGET_OS_TV
     if (@available(iOS 10.3, *)) {
         // Don't stream more FPS than the display can show
         if (_streamConfig.frameRate > [UIScreen mainScreen].maximumFramesPerSecond) {
@@ -620,6 +638,7 @@ static NSMutableSet* hostList;
             Log(LOG_W, @"Clamping FPS to maximum refresh rate: %d", _streamConfig.frameRate);
         }
     }
+#endif
     
     _streamConfig.height = [streamSettings.height intValue];
     _streamConfig.width = [streamSettings.width intValue];
@@ -872,11 +891,6 @@ static NSMutableSet* hostList;
 
 #if !TARGET_OS_TV
 - (void)revealController:(SWRevealViewController *)revealController didMoveToPosition:(FrontViewPosition)position {
-    // If we moved back to the center position, we should save the settings
-    if (position == FrontViewPositionLeft) {
-        [(SettingsViewController*)[revealController rearViewController] saveSettings];
-    }
-    
     currentPosition = position;
 }
 #endif
@@ -905,9 +919,8 @@ static NSMutableSet* hostList;
 
 - (void)adjustScrollViewForSafeArea:(UIScrollView*)view {
     if (@available(iOS 11.0, *)) {
-        if (self.view.safeAreaInsets.left >= 20 || self.view.safeAreaInsets.right >= 20) {
-            view.contentInset = UIEdgeInsetsMake(0, 20, 0, 20);
-        }
+        view.contentInset = UIEdgeInsetsZero;
+        view.contentInsetAdjustmentBehavior = view == hostScrollView ? UIScrollViewContentInsetAdjustmentNever : UIScrollViewContentInsetAdjustmentAutomatic;
     }
 }
 
@@ -924,24 +937,30 @@ static NSMutableSet* hostList;
     [super viewDidLoad];
         
 #if !TARGET_OS_TV
-    // Set the side bar button action. When it's tapped, it'll show the sidebar.
-    [_settingsButton setTarget:self.revealViewController];
-    [_settingsButton setAction:@selector(revealToggle:)];
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    self.navigationController.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    self.collectionView.backgroundColor = UIColor.systemBackgroundColor;
+    UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+    [appearance configureWithOpaqueBackground];
+    appearance.backgroundColor = UIColor.systemBackgroundColor;
+    appearance.titleTextAttributes = @{NSForegroundColorAttributeName:UIColor.labelColor};
+    self.navigationController.navigationBar.standardAppearance = appearance;
+    self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
+    self.navigationController.navigationBar.compactAppearance = appearance;
+    UIBarButtonItem *settings = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"gearshape"]
+        style:UIBarButtonItemStylePlain target:self action:@selector(openStreamSettings)];
+    settings.accessibilityLabel = NSLocalizedStringFromTable(@"settings.title", @"StreamTarget", nil);
+    settings.accessibilityIdentifier = @"home-stream-settings";
+    self.navigationItem.leftBarButtonItem = settings;
     
     // Set the host name button action. When it's tapped, it'll show the host selection view.
     [_upButton setTarget:self];
     [_upButton setAction:@selector(showHostSelectionView)];
     [self disableUpButton];
     
-    // Set the gesture
-    [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];
-    
     // Get callbacks associated with the viewController
     [self.revealViewController setDelegate:self];
-    
-    // Disable bounce-back on reveal VC otherwise the settings will snap closed
-    // if the user drags all the way off the screen opposite the settings pane.
-    self.revealViewController.bounceBackOnOverdraw = NO;
 #else
     // The settings button will direct the user into the Settings app on tvOS
     [_settingsButton setTarget:self];
@@ -982,6 +1001,14 @@ static NSMutableSet* hostList;
     hostScrollView.frame = CGRectMake(0, self.navigationController.navigationBar.frame.origin.y + self.navigationController.navigationBar.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
     [hostScrollView setShowsHorizontalScrollIndicator:NO];
     hostScrollView.delaysContentTouches = NO;
+    hostScrollView.directionalLockEnabled = YES;
+    _hostDiscoveryLabel = [[UILabel alloc] init];
+    _hostDiscoveryLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    _hostDiscoveryLabel.adjustsFontForContentSizeCategory = YES;
+    _hostDiscoveryLabel.text = NSLocalizedStringFromTable(@"hosts.searching", @"StreamTarget", nil);
+    _hostDiscoveryLabel.textColor = UIColor.secondaryLabelColor;
+    _hostDiscoveryLabel.textAlignment = NSTextAlignmentCenter;
+    _hostDiscoveryLabel.numberOfLines = 0;
     
     self.collectionView.delaysContentTouches = NO;
     self.collectionView.allowsMultipleSelection = NO;
@@ -1255,7 +1282,58 @@ static NSMutableSet* hostList;
     
     [hostScrollView addSubview:addComp];
     [hostScrollView setContentSize:CGSizeMake(prevEdge + addComp.frame.size.width, hostScrollView.frame.size.height)];
+#if !TARGET_OS_TV
+    if (hostList.count == 0) {
+        [hostScrollView addSubview:_hostDiscoveryLabel];
+    }
+    [self layoutHostViews];
+#endif
 }
+
+#if !TARGET_OS_TV
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    CGRect frame = self.view.safeAreaLayoutGuide.layoutFrame;
+    hostScrollView.frame = frame;
+    if (!CGSizeEqualToSize(_hostLayoutSize, frame.size)) {
+        _hostLayoutSize = frame.size;
+        [self layoutHostViews];
+    }
+}
+
+- (void)layoutHostViews {
+    NSMutableArray<UIComputerView *> *views = [[NSMutableArray alloc] init];
+    CGFloat totalWidth = 0;
+    CGFloat maxHeight = 0;
+    for (UIView *view in hostScrollView.subviews) {
+        if ([view isKindOfClass:UIComputerView.class]) {
+            [views addObject:(UIComputerView *)view];
+            totalWidth += view.bounds.size.width;
+            maxHeight = MAX(maxHeight, view.bounds.size.height);
+        }
+    }
+    CGFloat gap = 28;
+    totalWidth += MAX(0, (NSInteger)views.count - 1) * gap;
+    CGFloat width = hostScrollView.bounds.size.width;
+    CGFloat height = hostScrollView.bounds.size.height;
+    CGFloat x = MAX(16, (width - totalWidth) / 2);
+    BOOL showStatus = _hostDiscoveryLabel.superview == hostScrollView;
+    CGFloat centerY = MAX(maxHeight / 2 + 20, (height - (showStatus ? 70 : 0)) / 2);
+    for (UIComputerView *view in views) {
+        view.center = CGPointMake(x + view.bounds.size.width / 2, centerY);
+        x += view.bounds.size.width + gap;
+    }
+    CGFloat contentHeight = height;
+    if (showStatus) {
+        CGFloat textWidth = MAX(1, MIN(520, width - 32));
+        CGFloat textHeight = ceil([_hostDiscoveryLabel sizeThatFits:CGSizeMake(textWidth, CGFLOAT_MAX)].height);
+        _hostDiscoveryLabel.frame = CGRectMake(MAX(16, (width - textWidth) / 2), centerY + maxHeight / 2 + 20, textWidth, textHeight);
+        contentHeight = MAX(height, CGRectGetMaxY(_hostDiscoveryLabel.frame) + 20);
+    }
+    hostScrollView.contentSize = CGSizeMake(MAX(width, x - gap + 16), contentHeight);
+}
+
+#endif
 
 - (float) getCompViewX:(UIComputerView*)comp addComp:(UIComputerView*)addComp prevEdge:(float)prevEdge {
     float padding;

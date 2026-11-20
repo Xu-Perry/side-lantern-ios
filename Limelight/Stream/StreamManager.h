@@ -16,5 +16,6 @@
 - (void) stopStream;
 
 - (NSString*) getStatsOverlayText;
+- (void)updateVideoFrameRate:(int)frameRate bitrate:(int)bitrate;
 
 @end

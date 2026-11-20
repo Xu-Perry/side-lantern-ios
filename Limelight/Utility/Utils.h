@@ -20,8 +20,7 @@ typedef NS_ENUM(int, State) {
     StateOnline
 };
 
-FOUNDATION_EXPORT NSString *const deviceName;
-
++ (NSString*) deviceName;
 + (NSData*) randomBytes:(NSInteger)length;
 + (NSString*) bytesToHex:(NSData*)data;
 + (NSData*) hexToBytes:(NSString*) hex;

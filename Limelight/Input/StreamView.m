@@ -17,6 +17,35 @@
 
 static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 
+#if !TARGET_OS_TV
+@interface StreamView ()
+- (void)startInteractionTimer;
+@end
+
+@interface StreamControlsSurface : UIView
+@property (nonatomic, weak) OnScreenControls *controls;
+@property (nonatomic, weak) StreamView *stream;
+@end
+
+@implementation StreamControlsSurface
+- (void)layoutSubviews { [super layoutSubviews]; [self.controls layoutControls]; }
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    [self.stream startInteractionTimer];
+    [self.controls handleTouchDownEvent:touches];
+}
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    [self.stream startInteractionTimer];
+    [self.controls handleTouchMovedEvent:touches];
+}
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    [self.controls handleTouchUpEvent:touches];
+}
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+    [self.controls handleTouchUpEvent:touches];
+}
+@end
+#endif
+
 @implementation StreamView {
     OnScreenControls* onScreenControls;
     
@@ -44,6 +73,10 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     BOOL hasUserInteracted;
     
     NSDictionary<NSString *, NSNumber *> *dictCodes;
+#if !TARGET_OS_TV
+    __weak UIView *_separateControlsView;
+    ControllerSupport *_controlsSupport;
+#endif
 }
 
 - (void) setupStreamView:(ControllerSupport*)controllerSupport
@@ -75,6 +108,7 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     }
     
     onScreenControls = [[OnScreenControls alloc] initWithView:self controllerSup:controllerSupport streamConfig:streamConfig];
+    _controlsSupport = controllerSupport;
     OnScreenControlsLevel level = (OnScreenControlsLevel)[settings.onscreenControls integerValue];
     if (settings.absoluteTouchMode) {
         Log(LOG_I, @"On-screen controls disabled in absolute touch mode");
@@ -149,6 +183,12 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     }
 }
 
+- (void)updateVideoWidth:(int)width height:(int)height {
+    if (width <= 0 || height <= 0) return;
+    streamAspectRatio = (float)width / height;
+    [self setNeedsLayout];
+}
+
 - (void)interactionTimerExpired:(NSTimer *)timer {
     if (!hasUserInteracted) {
         // User has finished touching the screen
@@ -166,6 +206,51 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     [onScreenControls show];
 #endif
 }
+
+#if !TARGET_OS_TV
+- (UIView *)makeControlsSurface {
+    StreamControlsSurface *surface = [[StreamControlsSurface alloc] init];
+    surface.controls = onScreenControls;
+    surface.stream = self;
+    surface.multipleTouchEnabled = YES;
+    surface.backgroundColor = [UIColor colorWithWhite:0.06 alpha:1];
+    surface.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    surface.accessibilityIdentifier = @"stream-controls-area";
+    surface.accessibilityLabel = NSLocalizedStringFromTable(@"stream.controls", @"StreamTarget", nil);
+    UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(16, 12, 240, 52)];
+    title.text = surface.accessibilityLabel;
+    title.textColor = UIColor.secondaryLabelColor;
+    title.font = [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
+    title.adjustsFontForContentSizeCategory = YES;
+    title.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    [surface addSubview:title];
+    return surface;
+}
+
+- (void)setSeparateControlsView:(UIView *)view {
+    _separateControlsView = view;
+    [onScreenControls setView:view ?: self];
+}
+
+- (void)cancelControlTouches { [onScreenControls cancelTouches]; }
+
+- (void)applyOnScreenControlsLevel:(OnScreenControlsLevel)level {
+    [_controlsSupport setOnScreenControlsEnabled:level != OnScreenControlsLevelOff];
+    if (level == OnScreenControlsLevelAuto) {
+        [_controlsSupport initAutoOnScreenControlMode:onScreenControls];
+    }
+    else {
+        [_controlsSupport initAutoOnScreenControlMode:nil];
+        [onScreenControls setLevel:level];
+    }
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    if (_separateControlsView == nil) [onScreenControls layoutControls];
+    if (self.videoLayoutChanged) self.videoLayoutChanged();
+}
+#endif
 
 - (OnScreenControlsLevel) getCurrentOscState {
     if (onScreenControls == nil) {
@@ -343,7 +428,11 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     }
 #endif
     
+    #if !TARGET_OS_TV
+    if (_separateControlsView != nil || ![onScreenControls handleTouchDownEvent:touches]) {
+#else
     if (![onScreenControls handleTouchDownEvent:touches]) {
+#endif
         // We still inform the touch handler even if we're going trigger the
         // keyboard activation gesture. This is important to ensure the touch
         // handler has a consistent view of touch events to correctly suppress
@@ -542,7 +631,11 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     
     hasUserInteracted = YES;
     
+    #if !TARGET_OS_TV
+    if (_separateControlsView != nil || ![onScreenControls handleTouchMovedEvent:touches]) {
+#else
     if (![onScreenControls handleTouchMovedEvent:touches]) {
+#endif
         [touchHandler touchesMoved:touches withEvent:event];
     }
 }
@@ -609,7 +702,11 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     }
 #endif
     
+    #if !TARGET_OS_TV
+    if (_separateControlsView != nil || ![onScreenControls handleTouchUpEvent:touches]) {
+#else
     if (![onScreenControls handleTouchUpEvent:touches]) {
+#endif
         [touchHandler touchesEnded:touches withEvent:event];
     }
 }

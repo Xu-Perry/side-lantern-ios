@@ -6,6 +6,7 @@
 //  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
+@class TemporaryHost;
 @interface StreamConfiguration : NSObject
 
 @property NSString* host;
@@ -14,6 +15,9 @@
 @property NSString* gfeVersion;
 @property NSString* appID;
 @property NSString* appName;
+@property (nonatomic, copy) NSString *sideLanternMode;
+@property (nonatomic) BOOL manualVideoEnabled;
+@property (nonatomic, strong) TemporaryHost *settingsHost;
 @property NSString* rtspSessionUrl;
 @property int serverCodecModeSupport;
 @property int width;

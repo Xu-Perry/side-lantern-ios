@@ -29,6 +29,14 @@
                   config:(StreamConfiguration*)streamConfig;
 - (void) showOnScreenControls;
 - (OnScreenControlsLevel) getCurrentOscState;
+- (void)updateVideoWidth:(int)width height:(int)height;
+#if !TARGET_OS_TV
+- (UIView *)makeControlsSurface;
+- (void)setSeparateControlsView:(UIView *)view;
+- (void)cancelControlTouches;
+- (void)applyOnScreenControlsLevel:(OnScreenControlsLevel)level;
+@property (nonatomic, copy) void (^videoLayoutChanged)(void);
+#endif
 
 #if !TARGET_OS_TV
 - (void) updateCursorLocation:(CGPoint)location isMouse:(BOOL)isMouse;

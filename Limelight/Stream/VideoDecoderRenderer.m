@@ -27,6 +27,8 @@ extern int ff_isom_write_av1c(AVIOContext *pb, const uint8_t *buf, int size,
     AVSampleBufferDisplayLayer* displayLayer;
     int videoFormat;
     int frameRate;
+    int _videoWidth;
+    int _videoHeight;
     
     NSMutableArray *parameterSetBuffers;
     NSData *masteringDisplayColorVolume;
@@ -37,13 +39,10 @@ extern int ff_isom_write_av1c(AVIOContext *pb, const uint8_t *buf, int size,
     BOOL framePacing;
 }
 
-- (void)reinitializeDisplayLayer
-{
-    CALayer *oldLayer = displayLayer;
-    
-    displayLayer = [[AVSampleBufferDisplayLayer alloc] init];
-    displayLayer.backgroundColor = [UIColor blackColor].CGColor;
-    
+- (void)layoutVideoLayer {
+    if (displayLayer == nil) return;
+    [CATransaction begin];
+    [CATransaction setDisableActions:YES];
     // Ensure the AVSampleBufferDisplayLayer is sized to preserve the aspect ratio
     // of the video stream. We used to use AVLayerVideoGravityResizeAspect, but that
     // respects the PAR encoded in the SPS which causes our computed video-relative
@@ -57,6 +56,17 @@ extern int ff_isom_write_av1c(AVIOContext *pb, const uint8_t *buf, int size,
     }
     displayLayer.position = CGPointMake(CGRectGetMidX(_view.bounds), CGRectGetMidY(_view.bounds));
     displayLayer.bounds = CGRectMake(0, 0, videoSize.width, videoSize.height);
+    [CATransaction commit];
+}
+
+- (void)reinitializeDisplayLayer
+{
+    CALayer *oldLayer = displayLayer;
+
+    displayLayer = [[AVSampleBufferDisplayLayer alloc] init];
+    displayLayer.backgroundColor = [UIColor blackColor].CGColor;
+
+    [self layoutVideoLayer];
     displayLayer.videoGravity = AVLayerVideoGravityResize;
 
     // Hide the layer until we get an IDR frame. This ensures we
@@ -82,6 +92,10 @@ extern int ff_isom_write_av1c(AVIOContext *pb, const uint8_t *buf, int size,
     self = [super init];
     
     _view = view;
+#if !TARGET_OS_TV
+    __weak typeof(self) weakSelf = self;
+    _view.videoLayoutChanged = ^{ [weakSelf layoutVideoLayer]; };
+#endif
     _callbacks = callbacks;
     _streamAspectRatio = aspectRatio;
     framePacing = useFramePacing;
@@ -97,17 +111,30 @@ extern int ff_isom_write_av1c(AVIOContext *pb, const uint8_t *buf, int size,
 {
     self->videoFormat = videoFormat;
     self->frameRate = frameRate;
+    _videoWidth = videoWidth;
+    _videoHeight = videoHeight;
+}
+
+- (void)updateFrameRate:(int)newFrameRate {
+    if (newFrameRate <= 0 || self->frameRate == newFrameRate) return;
+    self->frameRate = newFrameRate;
+    [self updateDisplayFrameRate];
+}
+
+- (void)updateDisplayFrameRate {
+    NSInteger maximum = _view.window.windowScene.screen.maximumFramesPerSecond;
+    float displayRate = maximum > 0 ? MIN(self->frameRate, maximum) : self->frameRate;
+    if (@available(iOS 15.0, tvOS 15.0, *)) _displayLink.preferredFrameRateRange = CAFrameRateRangeMake(displayRate, displayRate, displayRate);
+    else _displayLink.preferredFramesPerSecond = displayRate;
 }
 
 - (void)start
 {
-    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkCallback:)];
-    if (@available(iOS 15.0, tvOS 15.0, *)) {
-        _displayLink.preferredFrameRateRange = CAFrameRateRangeMake(self->frameRate, self->frameRate, self->frameRate);
+    if (@available(iOS 27.0, tvOS 27.0, *)) {
+        _displayLink = [_view.window.windowScene displayLinkWithTarget:self selector:@selector(displayLinkCallback:)];
     }
-    else {
-        _displayLink.preferredFramesPerSecond = self->frameRate;
-    }
+    if (_displayLink == nil) _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkCallback:)];
+    [self updateDisplayFrameRate];
     [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
 }
 
@@ -513,6 +540,19 @@ int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit);
         // Can't decode if we haven't gotten our parameter sets yet
         free(data);
         return DR_NEED_IDR;
+    }
+
+    if (du->frameType == FRAME_TYPE_IDR) {
+        CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDesc);
+        if (dimensions.width > 0 && dimensions.height > 0 &&
+            (dimensions.width != _videoWidth || dimensions.height != _videoHeight)) {
+            _videoWidth = dimensions.width; _videoHeight = dimensions.height;
+            _streamAspectRatio = (float)dimensions.width / dimensions.height;
+            [displayLayer flush];
+            [self layoutVideoLayer];
+            if ([_callbacks respondsToSelector:@selector(videoSizeChangedWithWidth:height:)])
+                [_callbacks videoSizeChangedWithWidth:dimensions.width height:dimensions.height];
+        }
     }
     
     // Check for previous decoder errors before doing anything

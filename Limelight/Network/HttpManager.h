@@ -10,6 +10,7 @@
 #import "HttpRequest.h"
 #import "StreamConfiguration.h"
 #import "TemporaryHost.h"
+@class ManualVideoSettings;
 
 @interface HttpManager : NSObject <NSURLSessionDelegate>
 
@@ -23,6 +24,8 @@
 - (NSURLRequest*) newClientSecretRespRequest:(NSString*)clientPairSecret;
 - (NSURLRequest*) newPairChallenge;
 - (NSURLRequest*) newAppListRequest;
+- (NSURLRequest*) newStreamModesRequest;
+- (NSURLRequest *)newManualVideoRequestForSession:(NSString *)sessionIdentifier settings:(ManualVideoSettings *)settings;
 - (NSURLRequest*) newServerInfoRequest:(bool)fastFail;
 - (NSURLRequest*) newHttpServerInfoRequest:(bool)fastFail;
 - (NSURLRequest*) newHttpServerInfoRequest;

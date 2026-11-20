@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AABB00052026112000000003 /* StreamSettingsButton.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00052026112000000002 /* StreamSettingsButton.m */; };
+		AABB00042026112000000003 /* SettingsSidebar.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00042026112000000002 /* SettingsSidebar.m */; };
+		AABB00062026112000000003 /* StreamSettingsContainerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00062026112000000002 /* StreamSettingsContainerViewController.m */; };
+		AABB00072026112000000003 /* StreamWorkspaceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00072026112000000002 /* StreamWorkspaceViewController.m */; };
+		AABB00082026112000000003 /* ManualVideoSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00082026112000000002 /* ManualVideoSettings.m */; };
+		AABB00082026112000000004 /* ManualVideoSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00082026112000000002 /* ManualVideoSettings.m */; };
+		AABB00092026112000000003 /* ManualVideoController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00092026112000000002 /* ManualVideoController.m */; };
+		AABB00032026112000000003 /* SettingsChoiceView.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00032026112000000002 /* SettingsChoiceView.m */; };
+		AABB00022026112000000003 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00022026112000000002 /* SceneDelegate.m */; };
 		693B3A9B218638CD00982F7B /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 693B3A9A218638CD00982F7B /* Settings.bundle */; };
 		98181BE92791277400E43572 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98181BE82791275D00E43572 /* libSDL2.a */; };
 		98181BEB2791278F00E43572 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98181BEA2791278300E43572 /* libSDL2.a */; };
@@ -41,6 +50,13 @@
 		98CFB82F1CAD481B0048EF74 /* libmoonlight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98AB2E841CAD46840089BB98 /* libmoonlight-common.a */; };
 		98D5856D1C0EA79600F6CC00 /* TemporaryHost.m in Sources */ = {isa = PBXBuildFile; fileRef = 98D5856C1C0EA79600F6CC00 /* TemporaryHost.m */; };
 		98D585701C0ED0E800F6CC00 /* TemporarySettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 98D5856F1C0ED0E800F6CC00 /* TemporarySettings.m */; };
+		AABB00012026112000000003 /* StreamTargetPreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00012026112000000002 /* StreamTargetPreferences.m */; };
+		AABB00012026112000000006 /* StreamTargetSettingsView.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00012026112000000005 /* StreamTargetSettingsView.m */; };
+		AABB0001202611200000000A /* StreamTarget.strings in Resources */ = {isa = PBXBuildFile; fileRef = AABB00012026112000000009 /* StreamTarget.strings */; };
+		AABB0001202611200000000D /* StreamModesResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB0001202611200000000C /* StreamModesResponse.m */; };
+		AABB0001202611200000000E /* StreamModesResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB0001202611200000000C /* StreamModesResponse.m */; };
+		AABB0001202611200000000F /* StreamTargetPreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00012026112000000002 /* StreamTargetPreferences.m */; };
+		AABB00012026112000000010 /* StreamTarget.strings in Resources */ = {isa = PBXBuildFile; fileRef = AABB00012026112000000009 /* StreamTarget.strings */; };
 		DC1F5A07206436B20037755F /* ConnectionHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1F5A06206436B20037755F /* ConnectionHelper.m */; };
 		F74BEF9C2C1A705600224667 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = F74BEF9B2C1A705600224667 /* OpenSSL */; };
 		F74BEFA42C1A80E400224667 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = F74BEFA32C1A80E400224667 /* OpenSSL */; };
@@ -170,6 +186,22 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AABB00052026112000000001 /* StreamSettingsButton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamSettingsButton.h; sourceTree = "<group>"; };
+		AABB00052026112000000002 /* StreamSettingsButton.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamSettingsButton.m; sourceTree = "<group>"; };
+		AABB00042026112000000001 /* SettingsSidebar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsSidebar.h; sourceTree = "<group>"; };
+		AABB00042026112000000002 /* SettingsSidebar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsSidebar.m; sourceTree = "<group>"; };
+		AABB00062026112000000001 /* StreamSettingsContainerViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamSettingsContainerViewController.h; sourceTree = "<group>"; };
+		AABB00062026112000000002 /* StreamSettingsContainerViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamSettingsContainerViewController.m; sourceTree = "<group>"; };
+		AABB00072026112000000001 /* StreamWorkspaceViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamWorkspaceViewController.h; sourceTree = "<group>"; };
+		AABB00072026112000000002 /* StreamWorkspaceViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamWorkspaceViewController.m; sourceTree = "<group>"; };
+		AABB00082026112000000001 /* ManualVideoSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ManualVideoSettings.h; sourceTree = "<group>"; };
+		AABB00082026112000000002 /* ManualVideoSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ManualVideoSettings.m; sourceTree = "<group>"; };
+		AABB00092026112000000001 /* ManualVideoController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ManualVideoController.h; sourceTree = "<group>"; };
+		AABB00092026112000000002 /* ManualVideoController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ManualVideoController.m; sourceTree = "<group>"; };
+		AABB00032026112000000001 /* SettingsChoiceView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsChoiceView.h; sourceTree = "<group>"; };
+		AABB00032026112000000002 /* SettingsChoiceView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsChoiceView.m; sourceTree = "<group>"; };
+		AABB00022026112000000001 /* SceneDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SceneDelegate.h; sourceTree = "<group>"; };
+		AABB00022026112000000002 /* SceneDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SceneDelegate.m; sourceTree = "<group>"; };
 		566E9D2B2770B23A00EF7BFE /* Moonlight v1.7.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Moonlight v1.7.xcdatamodel"; sourceTree = "<group>"; };
 		693B3A9A218638CD00982F7B /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		9803CCAB254F9EAF00EE185E /* ConnectionCallbacks.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConnectionCallbacks.h; sourceTree = "<group>"; };
@@ -212,6 +244,14 @@
 		98D5856C1C0EA79600F6CC00 /* TemporaryHost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TemporaryHost.m; path = Database/TemporaryHost.m; sourceTree = "<group>"; };
 		98D5856E1C0ED0E800F6CC00 /* TemporarySettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TemporarySettings.h; path = Database/TemporarySettings.h; sourceTree = "<group>"; };
 		98D5856F1C0ED0E800F6CC00 /* TemporarySettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TemporarySettings.m; path = Database/TemporarySettings.m; sourceTree = "<group>"; };
+		AABB00012026112000000001 /* StreamTargetPreferences.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = StreamTargetPreferences.h; path = Database/StreamTargetPreferences.h; sourceTree = "<group>"; };
+		AABB00012026112000000002 /* StreamTargetPreferences.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = StreamTargetPreferences.m; path = Database/StreamTargetPreferences.m; sourceTree = "<group>"; };
+		AABB00012026112000000004 /* StreamTargetSettingsView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamTargetSettingsView.h; sourceTree = "<group>"; };
+		AABB00012026112000000005 /* StreamTargetSettingsView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamTargetSettingsView.m; sourceTree = "<group>"; };
+		AABB00012026112000000007 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/StreamTarget.strings; sourceTree = "<group>"; };
+		AABB00012026112000000008 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/StreamTarget.strings"; sourceTree = "<group>"; };
+		AABB0001202611200000000B /* StreamModesResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamModesResponse.h; sourceTree = "<group>"; };
+		AABB0001202611200000000C /* StreamModesResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamModesResponse.m; sourceTree = "<group>"; };
 		D4746EEA1CBC740C006FB401 /* Moonlight-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Moonlight-Bridging-Header.h"; path = "Input/Moonlight-Bridging-Header.h"; sourceTree = "<group>"; };
 		DC1F5A05206436B10037755F /* ConnectionHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConnectionHelper.h; sourceTree = "<group>"; };
 		DC1F5A06206436B20037755F /* ConnectionHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConnectionHelper.m; sourceTree = "<group>"; };
@@ -456,6 +496,8 @@
 				FB290CFA19B2C406004C83CF /* Supporting Files */,
 				FB290D0219B2C406004C83CF /* AppDelegate.h */,
 				FB290D0319B2C406004C83CF /* AppDelegate.m */,
+				AABB00022026112000000001 /* SceneDelegate.h */,
+				AABB00022026112000000002 /* SceneDelegate.m */,
 				FBDE86DE19F7A837001C18A8 /* UIComputerView.h */,
 				FBDE86DF19F7A837001C18A8 /* UIComputerView.m */,
 				FBDE86E419F82297001C18A8 /* UIAppView.h */,
@@ -479,6 +521,7 @@
 			children = (
 				FB290CFB19B2C406004C83CF /* Limelight-Info.plist */,
 				FB290CFC19B2C406004C83CF /* InfoPlist.strings */,
+				AABB00012026112000000009 /* StreamTarget.strings */,
 				FB290CFF19B2C406004C83CF /* main.m */,
 				FB290D0119B2C406004C83CF /* Limelight-Prefix.pch */,
 			);
@@ -548,6 +591,8 @@
 				FB89461919F646E200339C8A /* StreamConfiguration.m */,
 				FB89461A19F646E200339C8A /* StreamManager.h */,
 				FB89461B19F646E200339C8A /* StreamManager.m */,
+				AABB00092026112000000001 /* ManualVideoController.h */,
+				AABB00092026112000000002 /* ManualVideoController.m */,
 				FB89461C19F646E200339C8A /* VideoDecoderRenderer.h */,
 				FB89461D19F646E200339C8A /* VideoDecoderRenderer.m */,
 				9803CCAB254F9EAF00EE185E /* ConnectionCallbacks.h */,
@@ -577,6 +622,18 @@
 				FB89462719F646E200339C8A /* StreamFrameViewController.m */,
 				FBD3494E19FF2174002D2A60 /* SettingsViewController.h */,
 				FBD3494F19FF2174002D2A60 /* SettingsViewController.m */,
+				AABB00052026112000000001 /* StreamSettingsButton.h */,
+				AABB00052026112000000002 /* StreamSettingsButton.m */,
+				AABB00042026112000000001 /* SettingsSidebar.h */,
+				AABB00042026112000000002 /* SettingsSidebar.m */,
+				AABB00062026112000000001 /* StreamSettingsContainerViewController.h */,
+				AABB00062026112000000002 /* StreamSettingsContainerViewController.m */,
+				AABB00072026112000000001 /* StreamWorkspaceViewController.h */,
+				AABB00072026112000000002 /* StreamWorkspaceViewController.m */,
+				AABB00032026112000000001 /* SettingsChoiceView.h */,
+				AABB00032026112000000002 /* SettingsChoiceView.m */,
+				AABB00012026112000000004 /* StreamTargetSettingsView.h */,
+				AABB00012026112000000005 /* StreamTargetSettingsView.m */,
 				FB4A23B61A9D3637004D2EF2 /* LoadingFrameViewController.h */,
 				FB4A23B71A9D3637004D2EF2 /* LoadingFrameViewController.m */,
 			);
@@ -630,6 +687,10 @@
 		FB9AFD2F1A7C979700872C98 /* Http */ = {
 			isa = PBXGroup;
 			children = (
+				AABB0001202611200000000B /* StreamModesResponse.h */,
+				AABB0001202611200000000C /* StreamModesResponse.m */,
+				AABB00082026112000000001 /* ManualVideoSettings.h */,
+				AABB00082026112000000002 /* ManualVideoSettings.m */,
 				FB89460F19F646E200339C8A /* HttpManager.h */,
 				FB89461019F646E200339C8A /* HttpManager.m */,
 				FB9AFD351A7E02DB00872C98 /* HttpRequest.h */,
@@ -675,6 +736,8 @@
 			children = (
 				FBD349601A0089F6002D2A60 /* DataManager.h */,
 				FBD349611A0089F6002D2A60 /* DataManager.m */,
+				AABB00012026112000000001 /* StreamTargetPreferences.h */,
+				AABB00012026112000000002 /* StreamTargetPreferences.m */,
 				9832D1341BBCD5C50036EF48 /* TemporaryApp.h */,
 				9832D1351BBCD5C50036EF48 /* TemporaryApp.m */,
 				98D5856B1C0EA79600F6CC00 /* TemporaryHost.h */,
@@ -762,6 +825,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				"zh-Hans",
 				Base,
 			);
 			mainGroup = FB290CE519B2C406004C83CF;
@@ -806,6 +870,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AABB00012026112000000010 /* StreamTarget.strings in Resources */,
 				693B3A9B218638CD00982F7B /* Settings.bundle in Resources */,
 				FB1A681E21328A1B00507771 /* Images.xcassets in Resources */,
 				FB1A67622132419A00507771 /* Assets.xcassets in Resources */,
@@ -819,6 +884,7 @@
 			files = (
 				FB290E7919B37D81004C83CF /* iPad.storyboard in Resources */,
 				FB290CFE19B2C406004C83CF /* InfoPlist.strings in Resources */,
+				AABB0001202611200000000A /* StreamTarget.strings in Resources */,
 				FB290E7B19B38036004C83CF /* iPhone.storyboard in Resources */,
 				FB290D0919B2C406004C83CF /* Images.xcassets in Resources */,
 				FB89463819F6473800339C8A /* Launch Screen.xib in Resources */,
@@ -832,6 +898,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AABB0001202611200000000E /* StreamModesResponse.m in Sources */,
+				AABB00082026112000000004 /* ManualVideoSettings.m in Sources */,
+				AABB0001202611200000000F /* StreamTargetPreferences.m in Sources */,
 				9827E7A42514366900F25707 /* HapticContext.m in Sources */,
 				9897B6A62212732C00966419 /* Controller.m in Sources */,
 				9865DC3E21332D660005B9B9 /* MainFrameViewController.m in Sources */,
@@ -885,6 +954,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AABB00052026112000000003 /* StreamSettingsButton.m in Sources */,
+				AABB00042026112000000003 /* SettingsSidebar.m in Sources */,
+				AABB00062026112000000003 /* StreamSettingsContainerViewController.m in Sources */,
+				AABB00072026112000000003 /* StreamWorkspaceViewController.m in Sources */,
+				AABB00082026112000000003 /* ManualVideoSettings.m in Sources */,
+				AABB00092026112000000003 /* ManualVideoController.m in Sources */,
+				AABB00032026112000000003 /* SettingsChoiceView.m in Sources */,
+				AABB00022026112000000003 /* SceneDelegate.m in Sources */,
+				AABB0001202611200000000D /* StreamModesResponse.m in Sources */,
+				AABB00012026112000000003 /* StreamTargetPreferences.m in Sources */,
+				AABB00012026112000000006 /* StreamTargetSettingsView.m in Sources */,
 				FB290D0719B2C406004C83CF /* Limelight.xcdatamodeld in Sources */,
 				9819CC22254F180F008A7C8E /* AbsoluteTouchHandler.m in Sources */,
 				9819CC14254F107A008A7C8E /* RelativeTouchHandler.m in Sources */,
@@ -953,6 +1033,15 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		AABB00012026112000000009 /* StreamTarget.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AABB00012026112000000007 /* en */,
+				AABB00012026112000000008 /* zh-Hans */,
+			);
+			name = StreamTarget.strings;
+			sourceTree = "<group>";
+		};
 		FB1A675E2132419700507771 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1206,7 +1295,9 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LSBVPJ7WRY;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
@@ -1236,7 +1327,7 @@
 					"$(PROJECT_DIR)/libs/FFmpeg/lib/iOS-Sim",
 				);
 				MARKETING_VERSION = 9.0.2;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.moonlight-stream.Moonlight";
+				PRODUCT_BUNDLE_IDENTIFIER = com.panxu.sidelantern.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SKIP_INSTALL = NO;
@@ -1256,7 +1347,9 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LSBVPJ7WRY;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
@@ -1286,7 +1379,7 @@
 					"$(PROJECT_DIR)/libs/FFmpeg/lib/iOS-Sim",
 				);
 				MARKETING_VERSION = 9.0.2;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.moonlight-stream.Moonlight";
+				PRODUCT_BUNDLE_IDENTIFIER = com.panxu.sidelantern.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				SKIP_INSTALL = NO;
