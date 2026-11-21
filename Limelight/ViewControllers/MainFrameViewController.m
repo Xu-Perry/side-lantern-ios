@@ -28,6 +28,7 @@
 #import "ConnectionHelper.h"
 
 #if !TARGET_OS_TV
+#import "ComputerFilesViewController.h"
 #import "SettingsViewController.h"
 #else
 #import <sys/utsname.h>
@@ -471,7 +472,34 @@ static NSMutableSet* hostList;
             break;
     }
     
+    UIViewController* presenter = [self activeViewController];
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:message preferredStyle:UIAlertControllerStyleActionSheet];
+#if !TARGET_OS_TV
+    if (host.pairState == PairStatePaired && host.serverCert.length > 0) {
+        __weak UIAlertController* weakMenu = longClickAlert;
+        [longClickAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"Browse Computer Files", @"ComputerFiles", nil)
+                                                         style:UIAlertActionStyleDefault handler:^(UIAlertAction* action) {
+            void (^openBrowser)(void) = ^{
+                ComputerFilesViewController* browser = [[ComputerFilesViewController alloc] initWithHost:host];
+                UINavigationController* navigation = [[UINavigationController alloc] initWithRootViewController:browser];
+                navigation.modalPresentationStyle = UIModalPresentationFormSheet;
+                [presenter presentViewController:navigation animated:YES completion:nil];
+            };
+            UIAlertController* menu = weakMenu;
+            if (menu.isBeingDismissed &&
+                [menu.transitionCoordinator animateAlongsideTransition:nil completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                    openBrowser();
+                }]) {
+                return;
+            }
+            if (menu.presentingViewController) {
+                [menu dismissViewControllerAnimated:YES completion:openBrowser];
+            } else {
+                openBrowser();
+            }
+        }]];
+    }
+#endif
     if (host.state != StateOnline) {
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Wake PC" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             UIAlertController* wolAlert = [UIAlertController alertControllerWithTitle:@"Wake-On-LAN" message:@"" preferredStyle:UIAlertControllerStyleAlert];
@@ -556,7 +584,7 @@ static NSMutableSet* hostList;
     longClickAlert.popoverPresentationController.sourceView = view;
     
     longClickAlert.popoverPresentationController.sourceRect = CGRectMake(view.bounds.size.width / 2.0, view.bounds.size.height / 2.0, 1.0, 1.0); // center of the view
-    [[self activeViewController] presentViewController:longClickAlert animated:YES completion:nil];
+    [presenter presentViewController:longClickAlert animated:YES completion:nil];
 }
 
 - (void) addHostClicked {

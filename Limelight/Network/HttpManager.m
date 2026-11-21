@@ -22,6 +22,36 @@
 #define LONG_TIMEOUT_SEC 60
 #define EXTRA_LONG_TIMEOUT_SEC 180
 
+@interface HttpManager ()
+- (void)handleAuthenticationChallenge:(NSURLAuthenticationChallenge*)challenge
+                   requirePinnedCert:(BOOL)requirePinnedCert
+                   completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler;
+@end
+
+#if !TARGET_OS_TV
+@interface ComputerFilesSessionDelegate : NSObject <NSURLSessionTaskDelegate>
+@property (nonatomic, strong) HttpManager* manager;
+@end
+
+@implementation ComputerFilesSessionDelegate
+
+- (void)URLSession:(NSURLSession*)session
+ didReceiveChallenge:(NSURLAuthenticationChallenge*)challenge
+   completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler {
+    [self.manager handleAuthenticationChallenge:challenge requirePinnedCert:YES completionHandler:completionHandler];
+}
+
+- (void)URLSession:(NSURLSession*)session
+              task:(NSURLSessionTask*)task
+ willPerformHTTPRedirection:(NSHTTPURLResponse*)response
+        newRequest:(NSURLRequest*)request
+ completionHandler:(void (^)(NSURLRequest*))completionHandler {
+    completionHandler(nil);
+}
+
+@end
+#endif
+
 @implementation HttpManager {
     NSString* _urlSafeHostName;
     NSString* _baseHTTPURL;
@@ -187,6 +217,35 @@
     return request;
 }
 
+#if !TARGET_OS_TV
+- (NSURLRequest*)newComputerFilesRequest:(NSString*)endpoint queryItems:(NSArray<NSURLQueryItem*>*)queryItems {
+    if (_serverCert.length == 0 || _urlSafeHostName.length == 0 || ![self ensureHttpsUrlPopulated:NO]) {
+        return nil;
+    }
+
+    NSURLComponents* components = [NSURLComponents componentsWithString:_baseHTTPSURL];
+    components.path = [@"/sidelantern/v1/files" stringByAppendingString:endpoint];
+    components.queryItems = queryItems.count ? queryItems : nil;
+    // The host's query parser treats a literal plus sign as a space.
+    components.percentEncodedQuery = [components.percentEncodedQuery stringByReplacingOccurrencesOfString:@"+" withString:@"%2B"];
+    NSURL* url = components.URL;
+    int timeout = [endpoint isEqualToString:@"/download"] ? LONG_TIMEOUT_SEC : NORMAL_TIMEOUT_SEC;
+    return url ? [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
+                              timeoutInterval:timeout] : nil;
+}
+
+- (NSURLSession*)newComputerFilesSession {
+    NSURLSessionConfiguration* configuration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+    configuration.HTTPCookieStorage = nil;
+    configuration.URLCredentialStorage = nil;
+    configuration.URLCache = nil;
+    configuration.timeoutIntervalForResource = LONG_TIMEOUT_SEC;
+    ComputerFilesSessionDelegate* delegate = [[ComputerFilesSessionDelegate alloc] init];
+    delegate.manager = self;
+    return [NSURLSession sessionWithConfiguration:configuration delegate:delegate delegateQueue:nil];
+}
+#endif
+
 - (NSURLRequest*) newPairRequest:(NSData*)salt clientCert:(NSData*)clientCert {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=getservercert&salt=%@&clientcert=%@",
                            _baseHTTPURL, _uniqueId, _deviceName, [self bytesToHex:salt], [self bytesToHex:clientCert]];
@@ -316,8 +375,9 @@
 // Returns an array containing the certificate
 - (NSArray*)getCertificate:(SecIdentityRef) identity {
     SecCertificateRef certificate = nil;
-    
-    SecIdentityCopyCertificate(identity, &certificate);
+    if (SecIdentityCopyCertificate(identity, &certificate) != errSecSuccess || certificate == nil) {
+        return nil;
+    }
     
     return [[NSArray alloc] initWithObjects:(__bridge_transfer id)certificate, nil];
 }
@@ -326,6 +386,9 @@
 - (SecIdentityRef)getClientCertificate {
     SecIdentityRef identityApp = nil;
     CFDataRef p12Data = (__bridge CFDataRef)[CryptoManager readP12FromFile];
+    if (p12Data == nil) {
+        return nil;
+    }
 
     CFStringRef password = CFSTR("limelight");
     const void *keys[] = { kSecImportExportPassphrase };
@@ -350,33 +413,40 @@
 }
 
 - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(nonnull void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * __nullable))completionHandler {
-    // Allow untrusted server certificates
+    [self handleAuthenticationChallenge:challenge requirePinnedCert:NO completionHandler:completionHandler];
+}
+
+- (void)handleAuthenticationChallenge:(NSURLAuthenticationChallenge*)challenge
+                   requirePinnedCert:(BOOL)requirePinnedCert
+                   completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler {
+    NSURLSessionAuthChallengeDisposition unmatched = requirePinnedCert ? NSURLSessionAuthChallengeCancelAuthenticationChallenge
+                                                                       : NSURLSessionAuthChallengePerformDefaultHandling;
     if([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
     {
-        if (SecTrustGetCertificateCount(challenge.protectionSpace.serverTrust) != 1) {
+        if (challenge.protectionSpace.serverTrust == nil || SecTrustGetCertificateCount(challenge.protectionSpace.serverTrust) != 1) {
             Log(LOG_E, @"Server certificate count mismatch");
-            completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, NULL);
+            completionHandler(unmatched, nil);
             return;
         }
         
         SecCertificateRef actualCert = SecTrustGetCertificateAtIndex(challenge.protectionSpace.serverTrust, 0);
         if (actualCert == nil) {
             Log(LOG_E, @"Server certificate parsing error");
-            completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, NULL);
+            completionHandler(unmatched, nil);
             return;
         }
         
         CFDataRef actualCertData = SecCertificateCopyData(actualCert);
         if (actualCertData == nil) {
             Log(LOG_E, @"Server certificate data parsing error");
-            completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, NULL);
+            completionHandler(unmatched, nil);
             return;
         }
         
-        if (!CFEqual(actualCertData, (__bridge CFDataRef)_serverCert)) {
+        if (_serverCert == nil || !CFEqual(actualCertData, (__bridge CFDataRef)_serverCert)) {
             Log(LOG_E, @"Server certificate mismatch");
             CFRelease(actualCertData);
-            completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, NULL);
+            completionHandler(unmatched, nil);
             return;
         }
         
@@ -389,15 +459,30 @@
     // Respond to client certificate challenge with our certificate
     else if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodClientCertificate])
     {
+        if (requirePinnedCert && challenge.previousFailureCount != 0) {
+            completionHandler(unmatched, nil);
+            return;
+        }
         SecIdentityRef identity = [self getClientCertificate];
+        if (identity == nil) {
+            completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+            return;
+        }
         NSArray* certArray = [self getCertificate:identity];
-        NSURLCredential* newCredential = [NSURLCredential credentialWithIdentity:identity certificates:certArray persistence:NSURLCredentialPersistencePermanent];
+        if (requirePinnedCert && certArray == nil) {
+            CFRelease(identity);
+            completionHandler(unmatched, nil);
+            return;
+        }
+        NSURLCredentialPersistence persistence = requirePinnedCert ? NSURLCredentialPersistenceForSession
+                                                                    : NSURLCredentialPersistencePermanent;
+        NSURLCredential* newCredential = [NSURLCredential credentialWithIdentity:identity certificates:certArray persistence:persistence];
         CFRelease(identity);
         completionHandler(NSURLSessionAuthChallengeUseCredential, newCredential);
     }
     else
     {
-        completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, NULL);
+        completionHandler(unmatched, nil);
     }
 }
 

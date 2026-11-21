@@ -31,6 +31,12 @@
 - (NSURLRequest*) newAppAssetRequestWithAppId:(NSString*)appId;
 - (void) executeRequestSynchronously:(HttpRequest*)request;
 
+#if !TARGET_OS_TV
+// Request creation can block while discovering the host's HTTPS port.
+- (NSURLRequest*) newComputerFilesRequest:(NSString*)endpoint queryItems:(NSArray<NSURLQueryItem*>*)queryItems;
+- (NSURLSession*) newComputerFilesSession;
+#endif
+
 @end
 
 

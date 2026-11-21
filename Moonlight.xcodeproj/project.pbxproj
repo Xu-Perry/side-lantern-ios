@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1F11E5B0000000000000003 /* ComputerFilesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F11E5B0000000000000002 /* ComputerFilesViewController.m */; };
+		A1F11E5B0000000000000006 /* ComputerFilesClient.m in Sources */ = {isa = PBXBuildFile; fileRef = A1F11E5B0000000000000005 /* ComputerFilesClient.m */; };
+		A1F11E5B000000000000000A /* ComputerFiles.strings in Resources */ = {isa = PBXBuildFile; fileRef = A1F11E5B0000000000000009 /* ComputerFiles.strings */; };
 		693B3A9B218638CD00982F7B /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 693B3A9A218638CD00982F7B /* Settings.bundle */; };
 		98181BE92791277400E43572 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98181BE82791275D00E43572 /* libSDL2.a */; };
 		98181BEB2791278F00E43572 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98181BEA2791278300E43572 /* libSDL2.a */; };
@@ -170,6 +173,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A1F11E5B0000000000000001 /* ComputerFilesViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ComputerFilesViewController.h; sourceTree = "<group>"; };
+		A1F11E5B0000000000000002 /* ComputerFilesViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ComputerFilesViewController.m; sourceTree = "<group>"; };
+		A1F11E5B0000000000000004 /* ComputerFilesClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ComputerFilesClient.h; sourceTree = "<group>"; };
+		A1F11E5B0000000000000005 /* ComputerFilesClient.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ComputerFilesClient.m; sourceTree = "<group>"; };
+		A1F11E5B0000000000000007 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/ComputerFiles.strings; sourceTree = "<group>"; };
+		A1F11E5B0000000000000008 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/ComputerFiles.strings"; sourceTree = "<group>"; };
 		566E9D2B2770B23A00EF7BFE /* Moonlight v1.7.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Moonlight v1.7.xcdatamodel"; sourceTree = "<group>"; };
 		693B3A9A218638CD00982F7B /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		9803CCAB254F9EAF00EE185E /* ConnectionCallbacks.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConnectionCallbacks.h; sourceTree = "<group>"; };
@@ -479,6 +488,7 @@
 			children = (
 				FB290CFB19B2C406004C83CF /* Limelight-Info.plist */,
 				FB290CFC19B2C406004C83CF /* InfoPlist.strings */,
+				A1F11E5B0000000000000009 /* ComputerFiles.strings */,
 				FB290CFF19B2C406004C83CF /* main.m */,
 				FB290D0119B2C406004C83CF /* Limelight-Prefix.pch */,
 			);
@@ -573,6 +583,8 @@
 				FBD3495219FF36FB002D2A60 /* SWRevealViewController.m */,
 				FB89462419F646E200339C8A /* MainFrameViewController.h */,
 				FB89462519F646E200339C8A /* MainFrameViewController.m */,
+				A1F11E5B0000000000000001 /* ComputerFilesViewController.h */,
+				A1F11E5B0000000000000002 /* ComputerFilesViewController.m */,
 				FB89462619F646E200339C8A /* StreamFrameViewController.h */,
 				FB89462719F646E200339C8A /* StreamFrameViewController.m */,
 				FBD3494E19FF2174002D2A60 /* SettingsViewController.h */,
@@ -632,6 +644,8 @@
 			children = (
 				FB89460F19F646E200339C8A /* HttpManager.h */,
 				FB89461019F646E200339C8A /* HttpManager.m */,
+				A1F11E5B0000000000000004 /* ComputerFilesClient.h */,
+				A1F11E5B0000000000000005 /* ComputerFilesClient.m */,
 				FB9AFD351A7E02DB00872C98 /* HttpRequest.h */,
 				FB9AFD361A7E02DB00872C98 /* HttpRequest.m */,
 				FB9AFD261A7C84ED00872C98 /* HttpResponse.h */,
@@ -763,6 +777,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = FB290CE519B2C406004C83CF;
 			packageReferences = (
@@ -819,6 +834,7 @@
 			files = (
 				FB290E7919B37D81004C83CF /* iPad.storyboard in Resources */,
 				FB290CFE19B2C406004C83CF /* InfoPlist.strings in Resources */,
+				A1F11E5B000000000000000A /* ComputerFiles.strings in Resources */,
 				FB290E7B19B38036004C83CF /* iPhone.storyboard in Resources */,
 				FB290D0919B2C406004C83CF /* Images.xcassets in Resources */,
 				FB89463819F6473800339C8A /* Launch Screen.xib in Resources */,
@@ -912,6 +928,8 @@
 				FB4678FA1A55FFAD00377732 /* DiscoveryManager.m in Sources */,
 				98D5856D1C0EA79600F6CC00 /* TemporaryHost.m in Sources */,
 				FB89463519F646E200339C8A /* MainFrameViewController.m in Sources */,
+				A1F11E5B0000000000000003 /* ComputerFilesViewController.m in Sources */,
+				A1F11E5B0000000000000006 /* ComputerFilesClient.m in Sources */,
 				FBD1C8E21A8AD71400C6703C /* Logger.m in Sources */,
 				FB1D599A1BBCCD7E00F482CA /* AppCollectionView.m in Sources */,
 				FB89463619F646E200339C8A /* StreamFrameViewController.m in Sources */,
@@ -953,6 +971,15 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		A1F11E5B0000000000000009 /* ComputerFiles.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A1F11E5B0000000000000007 /* en */,
+				A1F11E5B0000000000000008 /* zh-Hans */,
+			);
+			name = ComputerFiles.strings;
+			sourceTree = "<group>";
+		};
 		FB1A675E2132419700507771 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
