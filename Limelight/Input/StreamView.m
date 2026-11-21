@@ -80,6 +80,9 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     __weak UIView *_separateControlsView;
     ControllerSupport *_controlsSupport;
     KeyboardShortcutBar *_keyboardToolbar;
+    NSMutableSet *_activeTouchInput;
+    NSMutableSet *_cancelledTouchInput;
+    CGRect _lastTouchBounds;
 #endif
 }
 
@@ -111,12 +114,11 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     self->touchHandler = [[RelativeTouchHandler alloc] initWithView:self];
 #else
     // iOS uses RelativeTouchHandler or AbsoluteTouchHandler depending on user preference
-    if (settings.absoluteTouchMode) {
-        self->touchHandler = [[AbsoluteTouchHandler alloc] initWithView:self];
-    }
-    else {
-        self->touchHandler = [[RelativeTouchHandler alloc] initWithView:self];
-    }
+    self.multipleTouchEnabled = YES;
+    _activeTouchInput = [NSMutableSet set];
+    _cancelledTouchInput = [NSMutableSet set];
+    _lastTouchBounds = self.bounds;
+    [self applyAbsoluteTouchMode:settings.absoluteTouchMode];
     
     onScreenControls = [[OnScreenControls alloc] initWithView:self controllerSup:controllerSupport streamConfig:streamConfig];
     _controlsSupport = controllerSupport;
@@ -196,6 +198,9 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 
 - (void)updateVideoWidth:(int)width height:(int)height {
     if (width <= 0 || height <= 0) return;
+#if !TARGET_OS_TV
+    [self cancelTouchInput];
+#endif
     streamAspectRatio = (float)width / height;
     [self setNeedsLayout];
 }
@@ -239,13 +244,39 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 }
 
 - (void)setSeparateControlsView:(UIView *)view {
+    if (_separateControlsView != view) [self cancelTouchInput];
     _separateControlsView = view;
     [onScreenControls setView:view ?: self];
 }
 
 - (void)cancelControlTouches { [onScreenControls cancelTouches]; }
 
+- (void)cancelTouchInput {
+    [_cancelledTouchInput unionSet:_activeTouchInput];
+    [_activeTouchInput removeAllObjects];
+    if ([touchHandler isKindOfClass:AbsoluteTouchHandler.class]) [(AbsoluteTouchHandler *)touchHandler cancelTouches];
+    else [(RelativeTouchHandler *)touchHandler cancelTouches];
+    [self cancelControlTouches];
+}
+
+- (void)applyAbsoluteTouchMode:(BOOL)absoluteTouchMode {
+    if (touchHandler != nil && _absoluteTouchMode == absoluteTouchMode) return;
+    [self cancelTouchInput];
+    _absoluteTouchMode = absoluteTouchMode;
+    touchHandler = absoluteTouchMode ? [[AbsoluteTouchHandler alloc] initWithView:self] :
+        [[RelativeTouchHandler alloc] initWithView:self];
+}
+
+- (BOOL)ignoreCancelledTouchSequence:(NSSet *)touches ending:(BOOL)ending {
+    if (_cancelledTouchInput.count == 0) return NO;
+    // Wait until every finger from the old gesture has lifted before accepting another gesture.
+    if (ending) [_cancelledTouchInput minusSet:touches];
+    else [_cancelledTouchInput unionSet:touches];
+    return YES;
+}
+
 - (void)applyOnScreenControlsLevel:(OnScreenControlsLevel)level {
+    if (_absoluteTouchMode) level = OnScreenControlsLevelOff;
     [_controlsSupport setOnScreenControlsEnabled:level != OnScreenControlsLevelOff];
     if (level == OnScreenControlsLevelAuto) {
         [_controlsSupport initAutoOnScreenControlMode:onScreenControls];
@@ -258,6 +289,10 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 
 - (void)layoutSubviews {
     [super layoutSubviews];
+    if (!CGRectEqualToRect(_lastTouchBounds, self.bounds)) {
+        [self cancelTouchInput];
+        _lastTouchBounds = self.bounds;
+    }
     if (_separateControlsView == nil) [onScreenControls layoutControls];
     if (self.videoLayoutChanged) self.videoLayoutChanged();
 }
@@ -440,6 +475,7 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 #endif
     
     #if !TARGET_OS_TV
+    if ([self ignoreCancelledTouchSequence:touches ending:NO]) return;
     if (_separateControlsView != nil || ![onScreenControls handleTouchDownEvent:touches]) {
 #else
     if (![onScreenControls handleTouchDownEvent:touches]) {
@@ -449,6 +485,9 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         // handler has a consistent view of touch events to correctly suppress
         // activation of one or two finger gestures when a three finger gesture
         // is triggered.
+#if !TARGET_OS_TV
+        [_activeTouchInput unionSet:touches];
+#endif
         [touchHandler touchesBegan:touches withEvent:event];
         
         if ([[event allTouches] count] == 3) {
@@ -609,6 +648,9 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     }
 #endif
     
+#if !TARGET_OS_TV
+    if ([self ignoreCancelledTouchSequence:touches ending:NO]) return;
+#endif
     hasUserInteracted = YES;
     
     #if !TARGET_OS_TV
@@ -665,6 +707,10 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         // If it's a mouse event, we're done
         return;
     }
+#if !TARGET_OS_TV
+    [_activeTouchInput minusSet:touches];
+    if ([self ignoreCancelledTouchSequence:touches ending:YES]) return;
+#endif
     
     Log(LOG_D, @"Touch up");
     
@@ -692,6 +738,10 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+#if !TARGET_OS_TV
+    [_activeTouchInput minusSet:touches];
+    if ([self ignoreCancelledTouchSequence:touches ending:YES]) return;
+#endif
     [touchHandler touchesCancelled:touches withEvent:event];
     [self handleMouseButtonEvent:BUTTON_ACTION_RELEASE
                       forTouches:touches

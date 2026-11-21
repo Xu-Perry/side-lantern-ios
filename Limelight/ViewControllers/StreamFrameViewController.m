@@ -227,16 +227,27 @@ static BOOL StreamHasTextResponder(UIView *view) {
                                                object: nil];
 #endif
     
-    // Only enable scroll and zoom in absolute touch mode
+    // Keep the same video surface when changing touch modes during a stream.
+#if TARGET_OS_TV
     if (_settings.absoluteTouchMode) {
+#else
+    {
+#endif
         _scrollView = [[UIScrollView alloc] initWithFrame:self.view.frame];
 #if !TARGET_OS_TV
         [_scrollView.panGestureRecognizer setMinimumNumberOfTouches:2];
+        _scrollView.delaysContentTouches = NO;
+        _scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+        _scrollView.scrollEnabled = _settings.absoluteTouchMode;
 #endif
         [_scrollView setShowsHorizontalScrollIndicator:NO];
         [_scrollView setShowsVerticalScrollIndicator:NO];
         [_scrollView setDelegate:self];
         [_scrollView setMaximumZoomScale:10.0f];
+#if !TARGET_OS_TV
+        _scrollView.panGestureRecognizer.enabled = _settings.absoluteTouchMode;
+        _scrollView.pinchGestureRecognizer.enabled = _settings.absoluteTouchMode;
+#endif
         
         // Add StreamView inside a UIScrollView for absolute mode
         [_scrollView addSubview:_streamView];
@@ -244,12 +255,12 @@ static BOOL StreamHasTextResponder(UIView *view) {
         [self.view addSubview:_scrollView];
 #endif
     }
+#if TARGET_OS_TV
     else {
         // Add StreamView directly in relative mode
-#if TARGET_OS_TV
         [self.view addSubview:_streamView];
-#endif
     }
+#endif
 
 #if !TARGET_OS_TV
     _controlsSurface = [_streamView makeControlsSurface];
@@ -270,7 +281,12 @@ static BOOL StreamHasTextResponder(UIView *view) {
     _settingsSidebar = [[SettingsSidebar alloc] initWithParent:_workspace.operationsController overlayParent:self];
     _settingsSidebar.onScreenControlsAvailable = !_settings.absoluteTouchMode;
     __weak typeof(self) weakSelf = self;
-    _workspace.layoutChanged = ^{ [weakSelf.view setNeedsLayout]; };
+    _workspace.layoutChanged = ^{
+        StreamFrameViewController *controller = weakSelf;
+        if (!controller) return;
+        [controller->_streamView cancelTouchInput];
+        [controller.view setNeedsLayout];
+    };
     _settingsSidebar.settingsChanged = ^{ [weakSelf applyLiveSettings]; };
     _settingsSidebar.exitStreamHandler = ^{ [weakSelf returnToMainFrame]; };
     _settingsSidebar.keyboardToggleHandler = ^{ [weakSelf toggleStreamKeyboard]; };
@@ -308,7 +324,7 @@ static BOOL StreamHasTextResponder(UIView *view) {
     _settingsSidebar.visibilityChanged = ^(BOOL visible) {
         StreamFrameViewController *controller = weakSelf;
         if (controller) {
-            [controller->_streamView cancelControlTouches];
+            [controller->_streamView cancelTouchInput];
             controller->_settingsFloatButton.interactionActive = visible || controller->_userIsInteracting;
             [controller.view setNeedsLayout];
         }
@@ -453,7 +469,7 @@ static BOOL StreamHasTextResponder(UIView *view) {
 
 - (void)toggleStreamSettings {
     if (!_settingsSidebar.visible && _streamView.keyboardVisible) [_streamView hideKeyboard];
-    [_streamView cancelControlTouches];
+    [_streamView cancelTouchInput];
     [_settingsSidebar showForHost:self.streamConfig.settingsHost frame:[self streamSidebarFrame] streaming:YES];
     [self updateManualVideoUI];
     if (_settingsSidebar.visible) [_manualVideoController refresh];
@@ -477,8 +493,18 @@ static BOOL StreamHasTextResponder(UIView *view) {
 
 - (void)applyLiveSettings {
     TemporarySettings *settings = [[[DataManager alloc] init] getSettings];
-    // Touch mode belongs to the active stream; a saved change applies only after reconnecting.
-    [_streamView applyOnScreenControlsLevel:_settings.absoluteTouchMode ? OnScreenControlsLevelOff :
+    if (_streamView.absoluteTouchMode != settings.absoluteTouchMode) {
+        [_streamView applyAbsoluteTouchMode:settings.absoluteTouchMode];
+        [_scrollView setZoomScale:1 animated:NO];
+        _scrollView.contentOffset = CGPointZero;
+        _scrollView.scrollEnabled = settings.absoluteTouchMode;
+        _scrollView.panGestureRecognizer.enabled = settings.absoluteTouchMode;
+        _scrollView.pinchGestureRecognizer.enabled = settings.absoluteTouchMode;
+        [self.view setNeedsLayout];
+    }
+    _settings.absoluteTouchMode = settings.absoluteTouchMode;
+    _settingsSidebar.onScreenControlsAvailable = !settings.absoluteTouchMode;
+    [_streamView applyOnScreenControlsLevel:settings.absoluteTouchMode ? OnScreenControlsLevelOff :
         (OnScreenControlsLevel)settings.onscreenControls.integerValue];
     if (_connectionStarted && settings.statsOverlay && _statsUpdateTimer == nil) {
         _statsUpdateTimer = [NSTimer scheduledTimerWithTimeInterval:1 target:self
@@ -543,7 +569,7 @@ static BOOL StreamHasTextResponder(UIView *view) {
 #if !TARGET_OS_TV
         [_manualVideoController cancel];
         [_settingsSidebar close];
-        [_streamView cancelControlTouches];
+        [_streamView cancelTouchInput];
 #endif
         [_controllerSupport cleanup];
         [UIApplication sharedApplication].idleTimerDisabled = NO;
@@ -634,6 +660,7 @@ static BOOL StreamHasTextResponder(UIView *view) {
 
 - (void) returnToMainFrame {
 #if !TARGET_OS_TV
+    [_streamView cancelTouchInput];
     [_manualVideoController cancel];
     [_settingsSidebar close];
 #endif
@@ -648,6 +675,9 @@ static BOOL StreamHasTextResponder(UIView *view) {
 
 // This will fire if the user opens control center or gets a low battery message
 - (void)applicationWillResignActive:(NSNotification *)notification {
+#if !TARGET_OS_TV
+    [_streamView cancelTouchInput];
+#endif
     if (_inactivityTimer != nil) {
         [_inactivityTimer invalidate];
     }

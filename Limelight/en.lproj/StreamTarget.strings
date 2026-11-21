@@ -9,7 +9,7 @@
 "target.choose_host" = "Choose a paired host to check display availability. Your selection is applied when you start a stream.";
 "target.loading" = "Checking stream targets on %@…";
 "target.ready" = "The selected display mode is applied when you start a stream. Unavailable targets cannot be started.";
-"target.legacy" = "This host does not support display selection. Primary Display Only uses its existing stream configuration; secondary modes require SideLantern.";
+"target.legacy" = "This host does not support secondary display modes. Enter Desktop uses its existing stream configuration; secondary-only and wireless display require a compatible SideLantern host.";
 "target.error.discovery" = "Could not verify this host's display modes. Check the connection and pairing, then try again.";
 "target.error.unknown_mode" = "The host does not recognize this display mode. Check that the client and host versions are compatible.";
 "target.error.capture_busy" = "The host is already streaming. Try again after the active stream ends; it will not be interrupted.";

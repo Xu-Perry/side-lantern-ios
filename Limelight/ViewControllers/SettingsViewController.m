@@ -9,10 +9,7 @@
 #import "SettingsViewController.h"
 #import "TemporarySettings.h"
 #import "DataManager.h"
-#import "StreamTargetSettingsView.h"
 #import "SWRevealViewController.h"
-#import "StreamModesResponse.h"
-#import "HttpManager.h"
 #import "SettingsChoiceView.h"
 
 #import <VideoToolbox/VideoToolbox.h>
@@ -21,11 +18,7 @@
 @implementation SettingsViewController {
     NSInteger _bitrate;
     NSInteger _lastSelectedResolutionIndex;
-    StreamTargetPreferences *_targetPreferences;
-    StreamTargetSettingsView *_targetSettingsView;
     NSMapTable<UIView *, NSNumber *> *_originalSettingsY;
-    TemporaryHost *_targetHost;
-    NSUInteger _targetQueryGeneration;
     NSMutableArray<SettingsChoiceView *> *_settingsChoices;
     NSLayoutConstraint *_settingsLeading;
     NSLayoutConstraint *_settingsTrailing;
@@ -164,16 +157,6 @@ BOOL isCustomResolution(CGSize res) {
             [_originalSettingsY setObject:@(view.frame.origin.y) forKey:view];
         }
     }
-    if (!self.streaming) {
-        _targetPreferences = [[StreamTargetPreferences alloc] init];
-        _targetSettingsView = [[StreamTargetSettingsView alloc] initWithFrame:CGRectZero];
-        _targetSettingsView.selectedTarget = _targetPreferences.selectedTarget;
-        [_targetSettingsView addTarget:self action:@selector(streamTargetChanged) forControlEvents:UIControlEventValueChanged];
-        [self.scrollView addSubview:_targetSettingsView];
-    }
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(streamTargetTextSizeChanged:)
-        name:UIContentSizeCategoryDidChangeNotification object:nil];
-    
     // Keep the exact saved Moonlight bitrate, including transport overhead.
     _bitrate = currentSettings.bitrate.integerValue;
 
@@ -351,12 +334,6 @@ BOOL isCustomResolution(CGSize res) {
         _manualVideoNotice.hidden = _manualVideoMessage.length == 0;
         [stack addArrangedSubview:_manualVideoNotice];
     }
-    if (!self.streaming) {
-        [_targetSettingsView removeFromSuperview];
-        _targetSettingsView.translatesAutoresizingMaskIntoConstraints = NO;
-        [stack addArrangedSubview:_targetSettingsView];
-        [stack setCustomSpacing:24 afterView:_targetSettingsView];
-    }
     _settingRows = [[UIStackView alloc] init];
     _settingRows.axis = UILayoutConstraintAxisVertical;
     _settingRows.spacing = 20;
@@ -459,7 +436,7 @@ BOOL isCustomResolution(CGSize res) {
     for (UIStackView *row in _allSettingRows) {
         UIControl *control = [_rowControls objectForKey:row];
         BOOL video = control == self.resolutionSelector || control == self.framerateSelector || control == self.bitrateSlider;
-        if (!self.streaming || control == self.statsOverlaySelector ||
+        if (!self.streaming || control == self.statsOverlaySelector || control == self.touchModeSelector ||
             (control == self.onscreenControlSelector && self.onScreenControlsAvailable) || (video && _manualVideoAvailable)) [visible addObject:row];
     }
     if ([_visibleSettingRows isEqualToArray:visible]) return;
@@ -473,6 +450,8 @@ BOOL isCustomResolution(CGSize res) {
 
 - (void)setOnScreenControlsAvailable:(BOOL)onScreenControlsAvailable {
     _onScreenControlsAvailable = onScreenControlsAvailable;
+    self.onscreenControlSelector.enabled = onScreenControlsAvailable;
+    [self refreshSettingsChoices];
     [self refreshVisibleSettingRows];
 }
 
@@ -483,9 +462,9 @@ BOOL isCustomResolution(CGSize res) {
 }
 
 - (UILabel *)effectLabelForControl:(UIControl *)control identifier:(NSString *)identifier {
-    BOOL live = control == self.statsOverlaySelector || control == self.onscreenControlSelector;
+    BOOL live = control == self.statsOverlaySelector || control == self.onscreenControlSelector || control == self.touchModeSelector;
     NSString *key = @"settings.effect.restart";
-    if (control == self.statsOverlaySelector) key = self.streaming ? @"settings.effect.live" : @"settings.effect.live_available";
+    if (control == self.statsOverlaySelector || control == self.touchModeSelector) key = self.streaming ? @"settings.effect.live" : @"settings.effect.live_available";
     else if (control == self.onscreenControlSelector) key = self.streaming ? @"settings.effect.controls" : @"settings.effect.controls_available";
     else if (control == self.optimizeSettingsSelector) key = @"settings.effect.launch";
     UILabel *label = [[UILabel alloc] init];
@@ -595,61 +574,12 @@ BOOL isCustomResolution(CGSize res) {
 }
 
 - (void) touchModeChanged {
-    // Disable on-screen controls in absolute touch mode
-    [self.onscreenControlSelector setEnabled:[self.touchModeSelector selectedSegmentIndex] == 0];
-}
-
-- (void)streamTargetChanged {
-    _targetPreferences.selectedTarget = _targetSettingsView.selectedTarget;
-    [_targetPreferences save];
-    if (self.changeHandler) self.changeHandler();
-}
-
-- (void)streamTargetTextSizeChanged:(NSNotification *)notification {
-    [self.view setNeedsLayout];
-}
-
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-    [self configureStreamTargetsForHost:_targetHost];
+    self.onScreenControlsAvailable = self.touchModeSelector.selectedSegmentIndex == 0;
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [self saveSettings];
-}
-
-- (void)configureStreamTargetsForHost:(TemporaryHost *)host {
-    if (self.streaming) return;
-    if (![NSThread isMainThread]) {
-        dispatch_async(dispatch_get_main_queue(), ^{ [self configureStreamTargetsForHost:host]; });
-        return;
-    }
-    _targetHost = host;
-    if (!self.isViewLoaded) return;
-    NSUInteger generation = ++_targetQueryGeneration;
-    if (host == nil || host.pairState != PairStatePaired || host.serverCert.length == 0) {
-        [_targetSettingsView updateWithModes:nil statusText:NSLocalizedStringFromTable(@"target.choose_host", @"StreamTarget", nil)];
-        [self.view setNeedsLayout];
-        return;
-    }
-    NSString *loading = [NSString stringWithFormat:NSLocalizedStringFromTable(@"target.loading", @"StreamTarget", nil), host.name];
-    [_targetSettingsView updateWithModes:nil statusText:loading];
-    [self.view setNeedsLayout];
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        HttpManager *manager = [[HttpManager alloc] initWithHost:host];
-        StreamModesResponse *modes = [[StreamModesResponse alloc] init];
-        [manager executeRequestSynchronously:[HttpRequest requestForResponse:modes withUrlRequest:[manager newStreamModesRequest]]];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (generation != self->_targetQueryGeneration) {
-                return;
-            }
-            NSString *key = modes.supportsDisplayModes ? @"target.ready" : (modes.isLegacyHost ? @"target.legacy" : @"target.error.discovery");
-            NSString *status = [NSString stringWithFormat:@"%@\n%@", host.name, NSLocalizedStringFromTable(key, @"StreamTarget", nil)];
-            [self->_targetSettingsView updateWithModes:modes statusText:status];
-            [self.view setNeedsLayout];
-        });
-    });
 }
 
 - (void) updateBitrate {
@@ -905,6 +835,7 @@ BOOL isCustomResolution(CGSize res) {
     if (_editingCustomResolution) return;
     DataManager* dataMan = [[DataManager alloc] init];
     if (self.streaming) {
+        [dataMan saveAbsoluteTouchMode:self.touchModeSelector.selectedSegmentIndex == 1];
         [dataMan saveLiveControls:self.onScreenControlsAvailable ? @(self.onscreenControlSelector.selectedSegmentIndex) : nil
             statistics:@(self.statsOverlaySelector.selectedSegmentIndex == 1)];
         return;

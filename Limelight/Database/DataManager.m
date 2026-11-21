@@ -128,6 +128,13 @@
     }];
 }
 
+- (void)saveAbsoluteTouchMode:(BOOL)absoluteTouchMode {
+    [_managedObjectContext performBlockAndWait:^{
+        [self retrieveSettings].absoluteTouchMode = absoluteTouchMode;
+        [self saveData];
+    }];
+}
+
 - (void) updateAppsForExistingHost:(TemporaryHost *)host {
     [_managedObjectContext performBlockAndWait:^{
         Host* parent = [self getHostForTemporaryHost:host withHostRecords:[self fetchRecords:@"Host"]];

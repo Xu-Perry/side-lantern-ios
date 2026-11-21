@@ -37,6 +37,16 @@ static UIButton *DBIconButton(NSString *icon, NSString *label, UIActionHandler h
     [button addAction:[UIAction actionWithHandler:handler] forControlEvents:UIControlEventTouchUpInside];
     return button;
 }
+static UIButtonConfiguration *DBActionConfiguration(void) {
+    UIButtonConfiguration *configuration = UIButtonConfiguration.tintedButtonConfiguration;
+    configuration.cornerStyle = UIButtonConfigurationCornerStyleCapsule;
+    configuration.baseForegroundColor = UIColor.systemBlueColor;
+    configuration.baseBackgroundColor = UIColor.systemBlueColor;
+    configuration.background.strokeColor = [UIColor.systemBlueColor colorWithAlphaComponent:0.3];
+    configuration.background.strokeWidth = 1;
+    configuration.contentInsets = NSDirectionalEdgeInsetsMake(10, 12, 10, 12);
+    return configuration;
+}
 
 @interface DBStatusView : UIView
 - (void)update:(TemporaryHost *)host;
@@ -168,10 +178,10 @@ static UIButton *DBIconButton(NSString *icon, NSString *label, UIActionHandler h
     CGPoint offset = _scroll.contentOffset; for (UIView *view in _stack.arrangedSubviews.copy) [view removeFromSuperview];
     UILabel *title = [[UILabel alloc] init]; title.text = DBText(@"devices.title"); title.font = [UIFont systemFontOfSize:30 weight:UIFontWeightBold]; title.textColor = UIColor.labelColor;
     [title setContentCompressionResistancePriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
-    UIButton *filter = [UIButton buttonWithType:UIButtonTypeSystem]; UIButtonConfiguration *configuration = UIButtonConfiguration.tintedButtonConfiguration;
+    UIButton *filter = [UIButton buttonWithType:UIButtonTypeSystem]; UIButtonConfiguration *configuration = DBActionConfiguration();
     configuration.title = DBText(_onlineOnly ? @"devices.online_only" : @"devices.all"); configuration.image = [UIImage systemImageNamed:@"rectangle.2.swap"];
-    configuration.imagePadding = 5; configuration.cornerStyle = UIButtonConfigurationCornerStyleCapsule; configuration.baseForegroundColor = UIColor.secondaryLabelColor;
-    configuration.baseBackgroundColor = UIColor.secondaryLabelColor; configuration.contentInsets = NSDirectionalEdgeInsetsMake(5, 9, 5, 9); filter.configuration = configuration;
+    configuration.imagePadding = 5; filter.configuration = configuration;
+    filter.accessibilityIdentifier = @"device-filter";
     [filter setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal]; [filter addTarget:self action:@selector(filter:) forControlEvents:UIControlEventTouchUpInside];
     __weak typeof(self) weakSelf = self;
     UIStackView *heading = [[UIStackView alloc] initWithArrangedSubviews:@[title, filter]]; heading.alignment = UIStackViewAlignmentCenter; heading.spacing = 8; [_stack addArrangedSubview:heading];
@@ -254,7 +264,7 @@ static UIButton *DBIconButton(NSString *icon, NSString *label, UIActionHandler h
 - (void)done { [NSUserDefaults.standardUserDefaults setObject:_selected.allObjects forKey:DBQuickKey(_host)]; if (_completion) _completion(); [self cancel]; }
 @end
 
-@interface DBAppButton : UIButton <UIContextMenuInteractionDelegate>
+@interface DBAppButton : UIButton
 - (instancetype)initWithApp:(TemporaryApp *)app cache:(NSCache *)cache delegate:(id<AppCallback>)delegate;
 @end
 @implementation DBAppButton {
@@ -271,7 +281,13 @@ static UIButton *DBIconButton(NSString *icon, NSString *label, UIActionHandler h
         _running.hidden = ![app.id isEqualToString:app.host.currentGame];
         [self addSubview:_image]; [self addSubview:_name]; [self addSubview:_running];
         self.alpha = app.hidden ? 0.45 : 1; self.accessibilityLabel = app.name; self.accessibilityIdentifier = [@"device-launch-app-" stringByAppendingString:app.id ?: @""];
-        [self addTarget:self action:@selector(activate) forControlEvents:UIControlEventPrimaryActionTriggered]; [self addInteraction:[[UIContextMenuInteraction alloc] initWithDelegate:self]];
+        [self addTarget:self action:@selector(activate) forControlEvents:UIControlEventPrimaryActionTriggered];
+        UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(showAppMenu:)];
+        [self addGestureRecognizer:longPress];
+        UITapGestureRecognizer *secondaryClick = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(showAppMenu:)];
+        secondaryClick.allowedTouchTypes = @[@(UITouchTypeIndirectPointer)];
+        secondaryClick.buttonMaskRequired = UIEventButtonMaskSecondary;
+        [self addGestureRecognizer:secondaryClick];
         self.pointerInteractionEnabled = YES; self.enabled = app.id.length > 0 && app.host.state == StateOnline && app.host.pairState == PairStatePaired;
     } return self;
 }
@@ -280,27 +296,12 @@ static UIButton *DBIconButton(NSString *icon, NSString *label, UIActionHandler h
 }
 - (void)activate { [_delegate appClicked:_app view:self]; }
 - (void)setHighlighted:(BOOL)highlighted { [super setHighlighted:highlighted]; self.alpha = highlighted ? 0.6 : _app.hidden ? 0.45 : 1; }
-- (UIContextMenuConfiguration *)contextMenuInteraction:(UIContextMenuInteraction *)interaction configurationForMenuAtLocation:(CGPoint)location {
-    [self cancelTrackingWithEvent:nil]; [_delegate appLongClicked:_app view:self]; return nil;
-}
-@end
-
-@interface DBAddAppButton : UIButton
-@end
-@implementation DBAddAppButton {
-    CAShapeLayer *_border; UIImageView *_icon; UILabel *_name;
-}
-- (instancetype)init {
-    if ((self = [super init])) {
-        _border = [CAShapeLayer layer]; _border.fillColor = UIColor.clearColor.CGColor; _border.lineWidth = 1.5; _border.lineDashPattern = @[@6, @5]; [self.layer addSublayer:_border];
-        _icon = [[UIImageView alloc] initWithImage:[UIImage systemImageNamed:@"plus.circle.fill"]]; _icon.tintColor = UIColor.tertiaryLabelColor; _icon.contentMode = UIViewContentModeScaleAspectFit;
-        _name = [[UILabel alloc] init]; _name.text = DBText(@"apps.add"); _name.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody]; _name.textColor = UIColor.labelColor; _name.textAlignment = NSTextAlignmentCenter; _name.userInteractionEnabled = NO;
-        [self addSubview:_icon]; [self addSubview:_name]; self.accessibilityLabel = _name.text; self.accessibilityIdentifier = @"device-add-quick-app";
-    } return self;
-}
-- (void)layoutSubviews { [super layoutSubviews]; _border.frame = self.bounds; _border.strokeColor = UIColor.separatorColor.CGColor; _border.path = [UIBezierPath bezierPathWithRoundedRect:CGRectInset(self.bounds, 1, 1) cornerRadius:14].CGPath;
-    CGFloat size = self.bounds.size.height > 220 ? 52 : 38; _icon.frame = CGRectMake((self.bounds.size.width - size) / 2, self.bounds.size.height / 2 - size + 4, size, size);
-    _name.frame = CGRectMake(5, CGRectGetMaxY(_icon.frame) + 10, MAX(0, self.bounds.size.width - 10), 26);
+- (void)showAppMenu:(UIGestureRecognizer *)gesture {
+    BOOL triggered = [gesture isKindOfClass:UILongPressGestureRecognizer.class] ? gesture.state == UIGestureRecognizerStateBegan :
+        gesture.state == UIGestureRecognizerStateRecognized;
+    if (!self.enabled || !triggered) return;
+    [self cancelTrackingWithEvent:nil];
+    [_delegate appLongClicked:_app view:self];
 }
 @end
 
@@ -340,24 +341,29 @@ static UIButton *DBIconButton(NSString *icon, NSString *label, UIActionHandler h
         [_desktop addAction:[UIAction actionWithHandler:^(UIAction *action) { DBDetailHeader *header = weakSelf; if (header && header.owner.openDesktop) header.owner.openDesktop(header->_host, header->_desktop); }] forControlEvents:UIControlEventTouchUpInside];
         _desktop.accessibilityIdentifier = @"device-enter-desktop"; [_card addSubview:_desktop];
         NSMutableArray *buttons = [NSMutableArray array], *lines = [NSMutableArray array];
-        NSArray *icons = @[@"folder.badge.plus", @"play.rectangle", @"terminal", @"square.grid.2x2"], *titles = @[@"files", @"view_mode", @"terminal", @"more"];
+        NSArray *icons = @[@"folder.badge.plus", @"display", @"display.2", @"square.grid.2x2"], *titles = @[@"files", @"secondary_display", @"wireless_display", @"more"];
         for (NSUInteger i = 0; i < icons.count; i++) {
             UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem]; UIButtonConfiguration *configuration = UIButtonConfiguration.plainButtonConfiguration;
             configuration.image = [UIImage systemImageNamed:icons[i]]; configuration.imagePlacement = NSDirectionalRectEdgeTop; configuration.imagePadding = 5;
+            configuration.contentInsets = NSDirectionalEdgeInsetsMake(8, 4, 8, 4);
             configuration.attributedTitle = [[NSAttributedString alloc] initWithString:DBText(titles[i]) attributes:@{NSFontAttributeName:[UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline]}];
             configuration.baseForegroundColor = UIColor.labelColor; button.configuration = configuration;
+            button.titleLabel.numberOfLines = 1; button.titleLabel.adjustsFontSizeToFitWidth = YES; button.titleLabel.minimumScaleFactor = 0.8;
             button.accessibilityIdentifier = [@"device-feature-" stringByAppendingString:titles[i]];
             if (i == 0) [button addAction:[UIAction actionWithHandler:^(UIAction *action) { DBDetailHeader *header = weakSelf; if (header && header.owner.openFiles) header.owner.openFiles(header->_host); }] forControlEvents:UIControlEventTouchUpInside];
-            else if (i == 3) [button addAction:[UIAction actionWithHandler:^(UIAction *action) { DBDetailHeader *header = weakSelf; if (header) [header.owner.hostDelegate hostLongClicked:header->_host view:action.sender]; }] forControlEvents:UIControlEventTouchUpInside];
-            else { button.enabled = NO; button.accessibilityHint = DBText(@"pending"); }
+            else if (i == 1) {
+                button.accessibilityHint = NSLocalizedStringFromTable(@"target.secondary.detail", @"StreamTarget", nil);
+                [button addAction:[UIAction actionWithHandler:^(UIAction *action) { DBDetailHeader *header = weakSelf; if (header && header.owner.openSecondaryDisplay) header.owner.openSecondaryDisplay(header->_host, action.sender); }] forControlEvents:UIControlEventTouchUpInside];
+            }
+            else if (i == 2) [button addAction:[UIAction actionWithHandler:^(UIAction *action) { DBDetailHeader *header = weakSelf; if (header && header.owner.openWirelessDisplay) header.owner.openWirelessDisplay(header->_host, action.sender); }] forControlEvents:UIControlEventTouchUpInside];
+            else [button addAction:[UIAction actionWithHandler:^(UIAction *action) { DBDetailHeader *header = weakSelf; if (header) [header.owner.hostDelegate hostLongClicked:header->_host view:action.sender]; }] forControlEvents:UIControlEventTouchUpInside];
             [buttons addObject:button]; [_card addSubview:button];
             if (i > 0) { UIView *line = [[UIView alloc] init]; line.backgroundColor = UIColor.separatorColor; [lines addObject:line]; [_card addSubview:line]; }
         }
         _features = buttons; _separators = lines;
         _quickTitle = [[UILabel alloc] init]; _quickTitle.font = [UIFont systemFontOfSize:21 weight:UIFontWeightSemibold]; _quickTitle.textColor = UIColor.labelColor;
-        _manage = [UIButton buttonWithType:UIButtonTypeSystem]; UIButtonConfiguration *configuration = UIButtonConfiguration.tintedButtonConfiguration;
+        _manage = [UIButton buttonWithType:UIButtonTypeSystem]; UIButtonConfiguration *configuration = DBActionConfiguration();
         configuration.title = DBText(@"apps.manage"); configuration.image = [UIImage systemImageNamed:@"square.grid.2x2"]; configuration.imagePadding = 5;
-        configuration.cornerStyle = UIButtonConfigurationCornerStyleCapsule; configuration.baseForegroundColor = UIColor.secondaryLabelColor; configuration.baseBackgroundColor = UIColor.secondaryLabelColor;
         _manage.configuration = configuration; [_manage addAction:[UIAction actionWithHandler:^(UIAction *action) { if (weakSelf.manageApps) weakSelf.manageApps(); }] forControlEvents:UIControlEventTouchUpInside]; _manage.accessibilityIdentifier = @"device-manage-apps";
         for (UIView *view in @[_back, _status, _name, _more, _settings, _card, _quickTitle, _manage]) [self addSubview:view];
     } return self;
@@ -368,7 +374,9 @@ static UIButton *DBIconButton(NSString *icon, NSString *label, UIActionHandler h
     [_desktop setTitle:DBText(desktop ? @"desktop.enter" : host.appList.count ? @"desktop.choose" : @"desktop.unavailable") forState:UIControlStateNormal];
     _desktop.enabled = host.state == StateOnline && host.pairState == PairStatePaired && host.appList.count > 0;
     _desktop.alpha = _desktop.enabled ? 1 : 0.65;
-    _features[0].enabled = self.owner.supportsFiles && self.owner.supportsFiles(host); _features[1].enabled = NO; _features[2].enabled = NO;
+    _features[0].enabled = self.owner.supportsFiles && self.owner.supportsFiles(host);
+    _features[1].enabled = host.state == StateOnline && host.pairState == PairStatePaired && host.appList.count > 0;
+    _features[2].enabled = _features[1].enabled;
     _quickTitle.text = DBText(allApps ? @"apps.all" : @"apps.quick_launch"); [self setNeedsLayout];
 }
 - (void)layoutSubviews {
@@ -378,9 +386,9 @@ static UIButton *DBIconButton(NSString *icon, NSString *label, UIActionHandler h
     CGFloat nameWidth = MIN([_name sizeThatFits:CGSizeMake(CGFLOAT_MAX, 40)].width + 2, MAX(0, settingsX - nameX - 48));
     _name.frame = CGRectMake(nameX, 0, nameWidth, 44); _more.frame = CGRectMake(CGRectGetMaxX(_name.frame) + 4, 0, 40, 44); _settings.frame = CGRectMake(settingsX, 0, 44, 44);
     _card.frame = CGRectMake(padding, 60, cardWidth, photo + 68); _cover.frame = CGRectMake(0, 0, cardWidth, photo); _desktop.frame = _cover.frame;
-    CGFloat buttonWidth = cardWidth / 4; for (NSUInteger i = 0; i < _features.count; i++) _features[i].frame = CGRectMake(i * buttonWidth, photo, buttonWidth, 68);
+    CGFloat buttonWidth = cardWidth / _features.count; for (NSUInteger i = 0; i < _features.count; i++) _features[i].frame = CGRectMake(i * buttonWidth, photo, buttonWidth, 68);
     for (NSUInteger i = 0; i < _separators.count; i++) _separators[i].frame = CGRectMake((i + 1) * buttonWidth, photo + 12, 0.5, 44);
-    CGFloat y = CGRectGetMaxY(_card.frame) + 24; _quickTitle.frame = CGRectMake(padding, y, MAX(0, cardWidth - 140), 42); _manage.frame = CGRectMake(width - padding - 132, y + 3, 132, 36);
+    CGFloat y = CGRectGetMaxY(_card.frame) + 24; _quickTitle.frame = CGRectMake(padding, y, MAX(0, cardWidth - 140), 44); _manage.frame = CGRectMake(width - padding - 132, y, 132, 44);
 }
 @end
 
@@ -414,12 +422,10 @@ static UIButton *DBIconButton(NSString *icon, NSString *label, UIActionHandler h
     for (DBDetailHeader *header in [self.collectionView visibleSupplementaryViewsOfKind:UICollectionElementKindSectionHeader]) [header configure:self.host cache:self.cache allApps:self.allApps];
 }
 - (void)viewDidLayoutSubviews { [super viewDidLayoutSubviews]; if (!CGSizeEqualToSize(_layoutSize, self.collectionView.bounds.size)) { _layoutSize = self.collectionView.bounds.size; [self.collectionView.collectionViewLayout invalidateLayout]; } }
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section { return _apps.count + 1; }
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section { return _apps.count; }
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"app" forIndexPath:indexPath]; for (UIView *view in cell.contentView.subviews) [view removeFromSuperview];
-    UIButton *button;
-    if ((NSUInteger)indexPath.row == _apps.count) { button = [[DBAddAppButton alloc] init]; [button addTarget:self action:@selector(manageApps) forControlEvents:UIControlEventPrimaryActionTriggered]; }
-    else button = [[DBAppButton alloc] initWithApp:_apps[indexPath.row] cache:self.cache delegate:self.owner.appDelegate];
+    UIButton *button = [[DBAppButton alloc] initWithApp:_apps[indexPath.row] cache:self.cache delegate:self.owner.appDelegate];
     button.frame = cell.contentView.bounds; button.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight; [cell.contentView addSubview:button]; return cell;
 }
 - (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath {
@@ -431,7 +437,6 @@ static UIButton *DBIconButton(NSString *icon, NSString *label, UIActionHandler h
 }
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)layout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
     CGFloat width = MAX(1, collectionView.bounds.size.width - 36);
-    if (_apps.count == 0) return CGSizeMake(width, MIN(340, MAX(240, self.view.bounds.size.height * 0.36)));
     NSInteger columns = MAX(2, (NSInteger)floor((width + 14) / 154)); CGFloat item = floor((width - (columns - 1) * 14) / columns); return CGSizeMake(item, 178);
 }
 - (void)manageApps {
@@ -546,7 +551,6 @@ UIViewController *DeviceBrowserPreview(BOOL detail, BOOL empty) {
     browser.openSettings = ^(TemporaryHost *host) {
         NSString *name = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"iPad" : @"iPhone";
         SettingsViewController *settings = [[UIStoryboard storyboardWithName:name bundle:nil] instantiateViewControllerWithIdentifier:@"settingsFrame"];
-        [settings configureStreamTargetsForHost:nil];
         [weakBrowser.navigationController pushViewController:settings animated:YES];
     };
     [browser updateHosts:hosts];

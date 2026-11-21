@@ -37,6 +37,9 @@
 - (UIView *)makeControlsSurface;
 - (void)setSeparateControlsView:(UIView *)view;
 - (void)cancelControlTouches;
+- (void)cancelTouchInput;
+- (void)applyAbsoluteTouchMode:(BOOL)absoluteTouchMode;
+@property (nonatomic, readonly) BOOL absoluteTouchMode;
 - (void)applyOnScreenControlsLevel:(OnScreenControlsLevel)level;
 @property (nonatomic, copy) void (^videoLayoutChanged)(void);
 #endif

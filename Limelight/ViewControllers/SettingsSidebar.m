@@ -78,6 +78,11 @@
     _container.keyboardVisible = keyboardVisible;
 }
 
+- (void)setOnScreenControlsAvailable:(BOOL)onScreenControlsAvailable {
+    _onScreenControlsAvailable = onScreenControlsAvailable;
+    _container.onScreenControlsAvailable = onScreenControlsAvailable;
+}
+
 - (void)updateManualVideoSettings:(ManualVideoSettings *)settings available:(BOOL)available updating:(BOOL)updating message:(NSString *)message {
     [_container updateManualVideoSettings:settings available:available updating:updating message:message];
 }

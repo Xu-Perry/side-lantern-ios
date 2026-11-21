@@ -19,13 +19,15 @@ static const int REFERENCE_HEIGHT = 720;
     BOOL isDragging;
     NSTimer* dragTimer;
     NSUInteger peakTouchCount;
+    uint8_t pendingClickButton;
+    NSUInteger clickGeneration;
     
 #if TARGET_OS_TV
     UIGestureRecognizer* remotePressRecognizer;
     UIGestureRecognizer* remoteLongPressRecognizer;
 #endif
     
-    UIView* view;
+    __weak UIView* view;
 }
 
 - (id)initWithView:(StreamView*)view {
@@ -52,13 +54,44 @@ static const int REFERENCE_HEIGHT = 720;
 }
 
 - (void)onDragStart:(NSTimer*)timer {
+    if (timer != dragTimer) return;
+    dragTimer = nil;
     if (!touchMoved && !isDragging){
+        [self releasePendingClick];
         isDragging = true;
         LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
     }
 }
 
+- (void)releasePendingClick {
+    clickGeneration++;
+    if (pendingClickButton) LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, pendingClickButton);
+    pendingClickButton = 0;
+}
+
+- (void)sendClick:(uint8_t)button {
+    [self releasePendingClick];
+    pendingClickButton = button;
+    NSUInteger generation = clickGeneration;
+    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, button);
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+        if (generation == self->clickGeneration) [self releasePendingClick];
+    });
+}
+
+- (void)cancelTouches {
+    [dragTimer invalidate];
+    dragTimer = nil;
+    if (isDragging) LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+    isDragging = NO;
+    [self releasePendingClick];
+    touchMoved = YES;
+    peakTouchCount = 0;
+}
+
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    [dragTimer invalidate];
+    dragTimer = nil;
     touchMoved = false;
     peakTouchCount = [[event allTouches] count];
     if ([[event allTouches] count] == 1) {
@@ -81,6 +114,7 @@ static const int REFERENCE_HEIGHT = 720;
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    if (peakTouchCount == 0) return;
     if ([[event allTouches] count] == 1) {
         UITouch *touch = [[event allTouches] anyObject];
         CGPoint currentLocation = [touch locationInView:view];
@@ -122,6 +156,7 @@ static const int REFERENCE_HEIGHT = 720;
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    if (peakTouchCount == 0) return;
     [dragTimer invalidate];
     dragTimer = nil;
     if (isDragging) {
@@ -129,29 +164,9 @@ static const int REFERENCE_HEIGHT = 720;
         LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
     } else if (!touchMoved) {
         if (peakTouchCount == 2) {
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-                Log(LOG_D, @"Sending right mouse button press");
-                
-                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
-                
-                // Wait 100 ms to simulate a real button press
-                usleep(100 * 1000);
-                
-                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
-            });
+            [self sendClick:BUTTON_RIGHT];
         } else if (peakTouchCount == 1) {
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-                if (!self->isDragging){
-                    Log(LOG_D, @"Sending left mouse button press");
-                    
-                    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
-                    
-                    // Wait 100 ms to simulate a real button press
-                    usleep(100 * 1000);
-                }
-                self->isDragging = false;
-                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
-            });
+            [self sendClick:BUTTON_LEFT];
         }
     }
     
@@ -168,37 +183,24 @@ static const int REFERENCE_HEIGHT = 720;
         // right clicks without moving their other finger.
         touchMoved = true;
     }
+    else if ([[event allTouches] count] == [touches count]) {
+        peakTouchCount = 0;
+    }
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    [dragTimer invalidate];
-    dragTimer = nil;
-    if (isDragging) {
-        isDragging = false;
-        LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
-    }
-    peakTouchCount = 0;
+    [self cancelTouches];
 }
 
 #if TARGET_OS_TV
 - (void)remoteButtonPressed:(id)sender {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        Log(LOG_D, @"Sending left mouse button press");
-        
-        // Mark this as touchMoved to avoid a duplicate press on touch up
-        self->touchMoved = true;
-        
-        LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
-        
-        // Wait 100 ms to simulate a real button press
-        usleep(100 * 1000);
-            
-        LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
-    });
+    // Mark this as touchMoved to avoid a duplicate press on touch up.
+    touchMoved = YES;
+    [self sendClick:BUTTON_LEFT];
 }
 - (void)remoteButtonLongPressed:(id)sender {
     Log(LOG_D, @"Holding left mouse button");
-    
+    [self releasePendingClick];
     isDragging = true;
     LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
 }

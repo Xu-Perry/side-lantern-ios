@@ -7,30 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AABB00122026112100000003 /* KeyboardShortcut.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00122026112100000002; };
-		AABB00132026112100000003 /* KeyboardShortcutBar.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00132026112100000002; };
-		AABB00142026112100000003 /* KeyboardShortcutsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00142026112100000002; };
-		AABB0015202611210000000A /* KeyboardShortcuts.strings in Resources */ = {isa = PBXBuildFile; fileRef = AABB00152026112100000009; };
-		AABB00112026112100000003 /* SideLanternNavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00112026112100000002; };
-		735E9624D5C40E8C8C7C4646 /* Devices.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B2C0F6454DE2F7E76A1D559; };
-		DF738CE1A94B68D90FDE4563 /* DeviceBrowserViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D3F41CFB6A1B678B2D5DACA; };
-		1DCBE95985C0835D2A710B4A /* FileTransferPreview.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B66C6D0D77B18CCC31939E8; };
-		E54180A7C3A5C1B314D31531 /* FileTransferProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 013535CE6CCEDCB92D62737C; };
-		5E2D3B730D56D27E5F4A69AA /* FileTransferClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 378C6820C75FCC220EC6FE11; };
-		BA4CEEC8850892FE3C4B7D75 /* FileTransferManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 808D4E48CAD045040D174CC3; };
-		2AB9F82EB6E201063DBFECA8 /* FileTransferViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 602F5B2516CAC41A0F8F981D; };
-		501658FB1C762E5C2F4D5941 /* RemoteFilesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CC432DA58B6CA386C4081E0B; };
-		3E1C47883C44B1F69FBC00AA /* FileTransfer.strings in Resources */ = {isa = PBXBuildFile; fileRef = FE6C4B53F60E01B2BD0A3BD4; };
-		AABB00052026112000000003 /* StreamSettingsButton.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00052026112000000002 /* StreamSettingsButton.m */; };
-		AABB00042026112000000003 /* SettingsSidebar.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00042026112000000002 /* SettingsSidebar.m */; };
-		AABB00062026112000000003 /* StreamSettingsContainerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00062026112000000002 /* StreamSettingsContainerViewController.m */; };
-		AABB00072026112000000003 /* StreamWorkspaceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00072026112000000002 /* StreamWorkspaceViewController.m */; };
-		AABB00082026112000000003 /* ManualVideoSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00082026112000000002 /* ManualVideoSettings.m */; };
-		AABB00082026112000000004 /* ManualVideoSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00082026112000000002 /* ManualVideoSettings.m */; };
-		AABB00092026112000000003 /* ManualVideoController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00092026112000000002 /* ManualVideoController.m */; };
-		AABB00032026112000000003 /* SettingsChoiceView.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00032026112000000002 /* SettingsChoiceView.m */; };
-		AABB00022026112000000003 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00022026112000000002 /* SceneDelegate.m */; };
+		1DCBE95985C0835D2A710B4A /* FileTransferPreview.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B66C6D0D77B18CCC31939E8 /* FileTransferPreview.m */; };
+		2AB9F82EB6E201063DBFECA8 /* FileTransferViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 602F5B2516CAC41A0F8F981D /* FileTransferViewController.m */; };
+		3E1C47883C44B1F69FBC00AA /* FileTransfer.strings in Resources */ = {isa = PBXBuildFile; fileRef = FE6C4B53F60E01B2BD0A3BD4 /* FileTransfer.strings */; };
+		501658FB1C762E5C2F4D5941 /* RemoteFilesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CC432DA58B6CA386C4081E0B /* RemoteFilesViewController.m */; };
+		5E2D3B730D56D27E5F4A69AA /* FileTransferClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 378C6820C75FCC220EC6FE11 /* FileTransferClient.m */; };
 		693B3A9B218638CD00982F7B /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 693B3A9A218638CD00982F7B /* Settings.bundle */; };
+		735E9624D5C40E8C8C7C4646 /* Devices.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B2C0F6454DE2F7E76A1D559 /* Devices.strings */; };
 		98181BE92791277400E43572 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98181BE82791275D00E43572 /* libSDL2.a */; };
 		98181BEB2791278F00E43572 /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98181BEA2791278300E43572 /* libSDL2.a */; };
 		98181BED2791281100E43572 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 98181BEC2791281100E43572 /* CoreMotion.framework */; };
@@ -71,7 +54,24 @@
 		AABB0001202611200000000E /* StreamModesResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB0001202611200000000C /* StreamModesResponse.m */; };
 		AABB0001202611200000000F /* StreamTargetPreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00012026112000000002 /* StreamTargetPreferences.m */; };
 		AABB00012026112000000010 /* StreamTarget.strings in Resources */ = {isa = PBXBuildFile; fileRef = AABB00012026112000000009 /* StreamTarget.strings */; };
+		AABB00022026112000000003 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00022026112000000002 /* SceneDelegate.m */; };
+		AABB00032026112000000003 /* SettingsChoiceView.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00032026112000000002 /* SettingsChoiceView.m */; };
+		AABB00042026112000000003 /* SettingsSidebar.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00042026112000000002 /* SettingsSidebar.m */; };
+		AABB00052026112000000003 /* StreamSettingsButton.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00052026112000000002 /* StreamSettingsButton.m */; };
+		AABB00062026112000000003 /* StreamSettingsContainerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00062026112000000002 /* StreamSettingsContainerViewController.m */; };
+		AABB00072026112000000003 /* StreamWorkspaceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00072026112000000002 /* StreamWorkspaceViewController.m */; };
+		AABB00082026112000000003 /* ManualVideoSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00082026112000000002 /* ManualVideoSettings.m */; };
+		AABB00082026112000000004 /* ManualVideoSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00082026112000000002 /* ManualVideoSettings.m */; };
+		AABB00092026112000000003 /* ManualVideoController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00092026112000000002 /* ManualVideoController.m */; };
+		AABB00112026112100000003 /* SideLanternNavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00112026112100000002 /* SideLanternNavigationController.m */; };
+		AABB00122026112100000003 /* KeyboardShortcut.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00122026112100000002 /* KeyboardShortcut.m */; };
+		AABB00132026112100000003 /* KeyboardShortcutBar.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00132026112100000002 /* KeyboardShortcutBar.m */; };
+		AABB00142026112100000003 /* KeyboardShortcutsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00142026112100000002 /* KeyboardShortcutsViewController.m */; };
+		AABB0015202611210000000A /* KeyboardShortcuts.strings in Resources */ = {isa = PBXBuildFile; fileRef = AABB00152026112100000009 /* KeyboardShortcuts.strings */; };
+		BA4CEEC8850892FE3C4B7D75 /* FileTransferManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 808D4E48CAD045040D174CC3 /* FileTransferManager.m */; };
 		DC1F5A07206436B20037755F /* ConnectionHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1F5A06206436B20037755F /* ConnectionHelper.m */; };
+		DF738CE1A94B68D90FDE4563 /* DeviceBrowserViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D3F41CFB6A1B678B2D5DACA /* DeviceBrowserViewController.m */; };
+		E54180A7C3A5C1B314D31531 /* FileTransferProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 013535CE6CCEDCB92D62737C /* FileTransferProtocol.m */; };
 		F74BEF9C2C1A705600224667 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = F74BEF9B2C1A705600224667 /* OpenSSL */; };
 		F74BEFA42C1A80E400224667 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = F74BEFA32C1A80E400224667 /* OpenSSL */; };
 		FB1A674D2131E65900507771 /* KeyboardSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = FB1A674C2131E65900507771 /* KeyboardSupport.m */; };
@@ -200,52 +200,20 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		AABB00122026112100000001 /* KeyboardShortcut.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardShortcut.h; sourceTree = "<group>"; };
-		AABB00122026112100000002 /* KeyboardShortcut.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardShortcut.m; sourceTree = "<group>"; };
-		AABB00132026112100000001 /* KeyboardShortcutBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardShortcutBar.h; sourceTree = "<group>"; };
-		AABB00132026112100000002 /* KeyboardShortcutBar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardShortcutBar.m; sourceTree = "<group>"; };
-		AABB00142026112100000001 /* KeyboardShortcutsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardShortcutsViewController.h; sourceTree = "<group>"; };
-		AABB00142026112100000002 /* KeyboardShortcutsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardShortcutsViewController.m; sourceTree = "<group>"; };
-		AABB00152026112100000007 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/KeyboardShortcuts.strings; sourceTree = "<group>"; };
-		AABB00152026112100000008 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/KeyboardShortcuts.strings"; sourceTree = "<group>"; };
-		AABB00112026112100000001 /* SideLanternNavigationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SideLanternNavigationController.h; sourceTree = "<group>"; };
-		AABB00112026112100000002 /* SideLanternNavigationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SideLanternNavigationController.m; sourceTree = "<group>"; };
-		242C6D3209B98CF3E5E0A5AD /* zh-Hans.lproj/Devices.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Devices.strings"; sourceTree = "<group>"; };
-		D757BF8AFCB4D07230333F8E /* en.lproj/Devices.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en"; path = "en.lproj/Devices.strings"; sourceTree = "<group>"; };
-		8D3F41CFB6A1B678B2D5DACA /* DeviceBrowserViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceBrowserViewController.m; sourceTree = "<group>"; };
-		DF366E04097787C62D04990E /* DeviceBrowserViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceBrowserViewController.h; sourceTree = "<group>"; };
-		853FE372BF4780E004405AFE /* FileTransferPreview.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FileTransferPreview.h; path = "Files/FileTransferPreview.h"; sourceTree = "<group>"; };
-		9B66C6D0D77B18CCC31939E8 /* FileTransferPreview.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FileTransferPreview.m; path = "Files/FileTransferPreview.m"; sourceTree = "<group>"; };
-		4B4F7E47C520D995BE5525CA /* Files/FileTransferProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "FileTransferProtocol.h"; path = "Files/FileTransferProtocol.h"; sourceTree = "<group>"; };
-		013535CE6CCEDCB92D62737C /* Files/FileTransferProtocol.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "FileTransferProtocol.m"; path = "Files/FileTransferProtocol.m"; sourceTree = "<group>"; };
-		1CC74230CB585A87EE420C9F /* Files/FileTransferClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "FileTransferClient.h"; path = "Files/FileTransferClient.h"; sourceTree = "<group>"; };
-		378C6820C75FCC220EC6FE11 /* Files/FileTransferClient.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "FileTransferClient.m"; path = "Files/FileTransferClient.m"; sourceTree = "<group>"; };
-		3B0570EEEF518EBBAC164EFF /* Files/FileTransferManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "FileTransferManager.h"; path = "Files/FileTransferManager.h"; sourceTree = "<group>"; };
-		808D4E48CAD045040D174CC3 /* Files/FileTransferManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "FileTransferManager.m"; path = "Files/FileTransferManager.m"; sourceTree = "<group>"; };
-		E5BF06DF277BC57343D10741 /* ViewControllers/FileTransferViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "FileTransferViewController.h"; path = "ViewControllers/FileTransferViewController.h"; sourceTree = "<group>"; };
-		602F5B2516CAC41A0F8F981D /* ViewControllers/FileTransferViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "FileTransferViewController.m"; path = "ViewControllers/FileTransferViewController.m"; sourceTree = "<group>"; };
-		1983F338C208D369D971FAD7 /* ViewControllers/RemoteFilesViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "RemoteFilesViewController.h"; path = "ViewControllers/RemoteFilesViewController.h"; sourceTree = "<group>"; };
-		CC432DA58B6CA386C4081E0B /* ViewControllers/RemoteFilesViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "RemoteFilesViewController.m"; path = "ViewControllers/RemoteFilesViewController.m"; sourceTree = "<group>"; };
-		0E57349816EA80762E67F8A3 /* en.lproj/FileTransfer.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en"; path = "en.lproj/FileTransfer.strings"; sourceTree = "<group>"; };
-		E5A56F16FD0AA122680C8EC0 /* zh-Hans.lproj/FileTransfer.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/FileTransfer.strings"; sourceTree = "<group>"; };
-		AABB00052026112000000001 /* StreamSettingsButton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamSettingsButton.h; sourceTree = "<group>"; };
-		AABB00052026112000000002 /* StreamSettingsButton.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamSettingsButton.m; sourceTree = "<group>"; };
-		AABB00042026112000000001 /* SettingsSidebar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsSidebar.h; sourceTree = "<group>"; };
-		AABB00042026112000000002 /* SettingsSidebar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsSidebar.m; sourceTree = "<group>"; };
-		AABB00062026112000000001 /* StreamSettingsContainerViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamSettingsContainerViewController.h; sourceTree = "<group>"; };
-		AABB00062026112000000002 /* StreamSettingsContainerViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamSettingsContainerViewController.m; sourceTree = "<group>"; };
-		AABB00072026112000000001 /* StreamWorkspaceViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamWorkspaceViewController.h; sourceTree = "<group>"; };
-		AABB00072026112000000002 /* StreamWorkspaceViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamWorkspaceViewController.m; sourceTree = "<group>"; };
-		AABB00082026112000000001 /* ManualVideoSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ManualVideoSettings.h; sourceTree = "<group>"; };
-		AABB00082026112000000002 /* ManualVideoSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ManualVideoSettings.m; sourceTree = "<group>"; };
-		AABB00092026112000000001 /* ManualVideoController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ManualVideoController.h; sourceTree = "<group>"; };
-		AABB00092026112000000002 /* ManualVideoController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ManualVideoController.m; sourceTree = "<group>"; };
-		AABB00032026112000000001 /* SettingsChoiceView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsChoiceView.h; sourceTree = "<group>"; };
-		AABB00032026112000000002 /* SettingsChoiceView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsChoiceView.m; sourceTree = "<group>"; };
-		AABB00022026112000000001 /* SceneDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SceneDelegate.h; sourceTree = "<group>"; };
-		AABB00022026112000000002 /* SceneDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SceneDelegate.m; sourceTree = "<group>"; };
+		013535CE6CCEDCB92D62737C /* FileTransferProtocol.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FileTransferProtocol.m; path = Files/FileTransferProtocol.m; sourceTree = "<group>"; };
+		0E57349816EA80762E67F8A3 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/FileTransfer.strings; sourceTree = "<group>"; };
+		1983F338C208D369D971FAD7 /* RemoteFilesViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = RemoteFilesViewController.h; path = ViewControllers/RemoteFilesViewController.h; sourceTree = "<group>"; };
+		1CC74230CB585A87EE420C9F /* FileTransferClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FileTransferClient.h; path = Files/FileTransferClient.h; sourceTree = "<group>"; };
+		242C6D3209B98CF3E5E0A5AD /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Devices.strings"; sourceTree = "<group>"; };
+		378C6820C75FCC220EC6FE11 /* FileTransferClient.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FileTransferClient.m; path = Files/FileTransferClient.m; sourceTree = "<group>"; };
+		3B0570EEEF518EBBAC164EFF /* FileTransferManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FileTransferManager.h; path = Files/FileTransferManager.h; sourceTree = "<group>"; };
+		4B4F7E47C520D995BE5525CA /* FileTransferProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FileTransferProtocol.h; path = Files/FileTransferProtocol.h; sourceTree = "<group>"; };
 		566E9D2B2770B23A00EF7BFE /* Moonlight v1.7.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Moonlight v1.7.xcdatamodel"; sourceTree = "<group>"; };
+		602F5B2516CAC41A0F8F981D /* FileTransferViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FileTransferViewController.m; path = ViewControllers/FileTransferViewController.m; sourceTree = "<group>"; };
 		693B3A9A218638CD00982F7B /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
+		808D4E48CAD045040D174CC3 /* FileTransferManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FileTransferManager.m; path = Files/FileTransferManager.m; sourceTree = "<group>"; };
+		853FE372BF4780E004405AFE /* FileTransferPreview.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FileTransferPreview.h; path = Files/FileTransferPreview.h; sourceTree = "<group>"; };
+		8D3F41CFB6A1B678B2D5DACA /* DeviceBrowserViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceBrowserViewController.m; sourceTree = "<group>"; };
 		9803CCAB254F9EAF00EE185E /* ConnectionCallbacks.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConnectionCallbacks.h; sourceTree = "<group>"; };
 		98132E8C20BC9A62007A053F /* Moonlight v1.1.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Moonlight v1.1.xcdatamodel"; sourceTree = "<group>"; };
 		98181BE82791275D00E43572 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = libs/SDL2/lib/iOS/libSDL2.a; sourceTree = "<group>"; };
@@ -286,6 +254,7 @@
 		98D5856C1C0EA79600F6CC00 /* TemporaryHost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TemporaryHost.m; path = Database/TemporaryHost.m; sourceTree = "<group>"; };
 		98D5856E1C0ED0E800F6CC00 /* TemporarySettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TemporarySettings.h; path = Database/TemporarySettings.h; sourceTree = "<group>"; };
 		98D5856F1C0ED0E800F6CC00 /* TemporarySettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TemporarySettings.m; path = Database/TemporarySettings.m; sourceTree = "<group>"; };
+		9B66C6D0D77B18CCC31939E8 /* FileTransferPreview.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FileTransferPreview.m; path = Files/FileTransferPreview.m; sourceTree = "<group>"; };
 		AABB00012026112000000001 /* StreamTargetPreferences.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = StreamTargetPreferences.h; path = Database/StreamTargetPreferences.h; sourceTree = "<group>"; };
 		AABB00012026112000000002 /* StreamTargetPreferences.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = StreamTargetPreferences.m; path = Database/StreamTargetPreferences.m; sourceTree = "<group>"; };
 		AABB00012026112000000004 /* StreamTargetSettingsView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamTargetSettingsView.h; sourceTree = "<group>"; };
@@ -294,9 +263,40 @@
 		AABB00012026112000000008 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/StreamTarget.strings"; sourceTree = "<group>"; };
 		AABB0001202611200000000B /* StreamModesResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamModesResponse.h; sourceTree = "<group>"; };
 		AABB0001202611200000000C /* StreamModesResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamModesResponse.m; sourceTree = "<group>"; };
+		AABB00022026112000000001 /* SceneDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SceneDelegate.h; sourceTree = "<group>"; };
+		AABB00022026112000000002 /* SceneDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SceneDelegate.m; sourceTree = "<group>"; };
+		AABB00032026112000000001 /* SettingsChoiceView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsChoiceView.h; sourceTree = "<group>"; };
+		AABB00032026112000000002 /* SettingsChoiceView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsChoiceView.m; sourceTree = "<group>"; };
+		AABB00042026112000000001 /* SettingsSidebar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsSidebar.h; sourceTree = "<group>"; };
+		AABB00042026112000000002 /* SettingsSidebar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsSidebar.m; sourceTree = "<group>"; };
+		AABB00052026112000000001 /* StreamSettingsButton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamSettingsButton.h; sourceTree = "<group>"; };
+		AABB00052026112000000002 /* StreamSettingsButton.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamSettingsButton.m; sourceTree = "<group>"; };
+		AABB00062026112000000001 /* StreamSettingsContainerViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamSettingsContainerViewController.h; sourceTree = "<group>"; };
+		AABB00062026112000000002 /* StreamSettingsContainerViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamSettingsContainerViewController.m; sourceTree = "<group>"; };
+		AABB00072026112000000001 /* StreamWorkspaceViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamWorkspaceViewController.h; sourceTree = "<group>"; };
+		AABB00072026112000000002 /* StreamWorkspaceViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamWorkspaceViewController.m; sourceTree = "<group>"; };
+		AABB00082026112000000001 /* ManualVideoSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ManualVideoSettings.h; sourceTree = "<group>"; };
+		AABB00082026112000000002 /* ManualVideoSettings.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ManualVideoSettings.m; sourceTree = "<group>"; };
+		AABB00092026112000000001 /* ManualVideoController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ManualVideoController.h; sourceTree = "<group>"; };
+		AABB00092026112000000002 /* ManualVideoController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ManualVideoController.m; sourceTree = "<group>"; };
+		AABB00112026112100000001 /* SideLanternNavigationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SideLanternNavigationController.h; sourceTree = "<group>"; };
+		AABB00112026112100000002 /* SideLanternNavigationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SideLanternNavigationController.m; sourceTree = "<group>"; };
+		AABB00122026112100000001 /* KeyboardShortcut.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardShortcut.h; sourceTree = "<group>"; };
+		AABB00122026112100000002 /* KeyboardShortcut.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardShortcut.m; sourceTree = "<group>"; };
+		AABB00132026112100000001 /* KeyboardShortcutBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardShortcutBar.h; sourceTree = "<group>"; };
+		AABB00132026112100000002 /* KeyboardShortcutBar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardShortcutBar.m; sourceTree = "<group>"; };
+		AABB00142026112100000001 /* KeyboardShortcutsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardShortcutsViewController.h; sourceTree = "<group>"; };
+		AABB00142026112100000002 /* KeyboardShortcutsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardShortcutsViewController.m; sourceTree = "<group>"; };
+		AABB00152026112100000007 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/KeyboardShortcuts.strings; sourceTree = "<group>"; };
+		AABB00152026112100000008 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/KeyboardShortcuts.strings"; sourceTree = "<group>"; };
+		CC432DA58B6CA386C4081E0B /* RemoteFilesViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = RemoteFilesViewController.m; path = ViewControllers/RemoteFilesViewController.m; sourceTree = "<group>"; };
 		D4746EEA1CBC740C006FB401 /* Moonlight-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Moonlight-Bridging-Header.h"; path = "Input/Moonlight-Bridging-Header.h"; sourceTree = "<group>"; };
+		D757BF8AFCB4D07230333F8E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Devices.strings; sourceTree = "<group>"; };
 		DC1F5A05206436B10037755F /* ConnectionHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConnectionHelper.h; sourceTree = "<group>"; };
 		DC1F5A06206436B20037755F /* ConnectionHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConnectionHelper.m; sourceTree = "<group>"; };
+		DF366E04097787C62D04990E /* DeviceBrowserViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceBrowserViewController.h; sourceTree = "<group>"; };
+		E5A56F16FD0AA122680C8EC0 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/FileTransfer.strings"; sourceTree = "<group>"; };
+		E5BF06DF277BC57343D10741 /* FileTransferViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FileTransferViewController.h; path = ViewControllers/FileTransferViewController.h; sourceTree = "<group>"; };
 		FB1A674B2131E65900507771 /* KeyboardSupport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardSupport.h; sourceTree = "<group>"; };
 		FB1A674C2131E65900507771 /* KeyboardSupport.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardSupport.m; sourceTree = "<group>"; };
 		FB1A67532132419700507771 /* Moonlight TV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Moonlight TV.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1122,9 +1122,15 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		AABB00152026112100000009 /* KeyboardShortcuts.strings */ = {isa = PBXVariantGroup; children = (AABB00152026112100000007, AABB00152026112100000008); name = KeyboardShortcuts.strings; sourceTree = "<group>"; };
-		0B2C0F6454DE2F7E76A1D559 /* Devices.strings */ = {isa = PBXVariantGroup; children = (D757BF8AFCB4D07230333F8E, 242C6D3209B98CF3E5E0A5AD); name = Devices.strings; sourceTree = "<group>"; };
-		FE6C4B53F60E01B2BD0A3BD4 /* FileTransfer.strings */ = {isa = PBXVariantGroup; children = (0E57349816EA80762E67F8A3, E5A56F16FD0AA122680C8EC0); name = FileTransfer.strings; sourceTree = "<group>"; };
+		0B2C0F6454DE2F7E76A1D559 /* Devices.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D757BF8AFCB4D07230333F8E /* en */,
+				242C6D3209B98CF3E5E0A5AD /* zh-Hans */,
+			);
+			name = Devices.strings;
+			sourceTree = "<group>";
+		};
 		AABB00012026112000000009 /* StreamTarget.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1132,6 +1138,15 @@
 				AABB00012026112000000008 /* zh-Hans */,
 			);
 			name = StreamTarget.strings;
+			sourceTree = "<group>";
+		};
+		AABB00152026112100000009 /* KeyboardShortcuts.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AABB00152026112100000007 /* en */,
+				AABB00152026112100000008 /* zh-Hans */,
+			);
+			name = KeyboardShortcuts.strings;
 			sourceTree = "<group>";
 		};
 		FB1A675E2132419700507771 /* Main.storyboard */ = {
@@ -1148,6 +1163,15 @@
 				FB290CFD19B2C406004C83CF /* en */,
 			);
 			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		FE6C4B53F60E01B2BD0A3BD4 /* FileTransfer.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0E57349816EA80762E67F8A3 /* en */,
+				E5A56F16FD0AA122680C8EC0 /* zh-Hans */,
+			);
+			name = FileTransfer.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -1383,10 +1407,6 @@
 		FB290D2119B2C406004C83CF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					SIDELANTERN_ALLOW_WAN_HOSTS,
-				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1396,6 +1416,10 @@
 				DEVELOPMENT_TEAM = LSBVPJ7WRY;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					SIDELANTERN_ALLOW_WAN_HOSTS,
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -1439,10 +1463,6 @@
 		FB290D2219B2C406004C83CF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					SIDELANTERN_ALLOW_WAN_HOSTS,
-				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1452,6 +1472,10 @@
 				DEVELOPMENT_TEAM = LSBVPJ7WRY;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					SIDELANTERN_ALLOW_WAN_HOSTS,
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,

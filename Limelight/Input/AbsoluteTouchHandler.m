@@ -23,13 +23,15 @@
 #define DOUBLE_TAP_DEAD_ZONE_DELTA 0.025f
 
 @implementation AbsoluteTouchHandler {
-    StreamView* view;
+    __weak StreamView* view;
     
     NSTimer* longPressTimer;
     UITouch* lastTouchDown;
     CGPoint lastTouchDownLocation;
     UITouch* lastTouchUp;
     CGPoint lastTouchUpLocation;
+    BOOL leftButtonDown;
+    BOOL rightButtonDown;
 }
 
 - (id)initWithView:(StreamView*)view {
@@ -39,14 +41,32 @@
 }
 
 - (void)onLongPressStart:(NSTimer*)timer {
+    if (timer != longPressTimer || !leftButtonDown) return;
+    longPressTimer = nil;
     // Raise the left click and start a right click
     LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
     LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
+    leftButtonDown = NO;
+    rightButtonDown = YES;
+}
+
+- (void)releaseButtons {
+    if (leftButtonDown) LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+    if (rightButtonDown) LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
+    leftButtonDown = rightButtonDown = NO;
+}
+
+- (void)cancelTouches {
+    [longPressTimer invalidate];
+    longPressTimer = nil;
+    [self releaseButtons];
+    lastTouchDown = lastTouchUp = nil;
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     // Ignore touch down events with more than one finger
     if ([[event allTouches] count] > 1) {
+        [self cancelTouches];
         return;
     }
     
@@ -54,7 +74,7 @@
     CGPoint touchLocation = [touch locationInView:view];
     
     // Don't reposition for finger down events within the deadzone. This makes double-clicking easier.
-    if (touch.timestamp - lastTouchUp.timestamp > DOUBLE_TAP_DEAD_ZONE_DELAY ||
+    if (lastTouchUp == nil || touch.timestamp - lastTouchUp.timestamp > DOUBLE_TAP_DEAD_ZONE_DELAY ||
         sqrt(pow((touchLocation.x / view.bounds.size.width) - (lastTouchUpLocation.x / view.bounds.size.width), 2) +
              pow((touchLocation.y / view.bounds.size.height) - (lastTouchUpLocation.y / view.bounds.size.height), 2)) > DOUBLE_TAP_DEAD_ZONE_DELTA) {
         [view updateCursorLocation:touchLocation isMouse:NO];
@@ -62,6 +82,7 @@
     
     // Press the left button down
     LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
+    leftButtonDown = YES;
     
     // Start the long press timer
     longPressTimer = [NSTimer scheduledTimerWithTimeInterval:LONG_PRESS_ACTIVATION_DELAY
@@ -76,7 +97,7 @@
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     // Ignore touch move events with more than one finger
-    if ([[event allTouches] count] > 1) {
+    if (lastTouchDown == nil || [[event allTouches] count] > 1) {
         return;
     }
     
@@ -95,16 +116,13 @@
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     // Only fire this logic if all touches have ended
-    if ([[event allTouches] count] == [touches count]) {
+    if (lastTouchDown != nil && [[event allTouches] count] == [touches count]) {
         // Cancel the long press timer
         [longPressTimer invalidate];
         longPressTimer = nil;
 
-        // Left button up on finger up
-        LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
-
-        // Raise right button too in case we triggered a long press gesture
-        LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
+        [self releaseButtons];
+        lastTouchDown = nil;
         
         // Remember this last touch for touch-down deadzoning
         lastTouchUp = [touches anyObject];
@@ -113,8 +131,7 @@
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    // Treat this as a normal touchesEnded event
-    [self touchesEnded:touches withEvent:event];
+    [self cancelTouches];
 }
 
 @end

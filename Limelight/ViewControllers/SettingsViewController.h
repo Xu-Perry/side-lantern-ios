@@ -39,7 +39,6 @@
 #pragma clang diagnostic pop
 
 - (void) saveSettings;
-- (void)configureStreamTargetsForHost:(TemporaryHost *)host;
 @property (nonatomic) BOOL streaming;
 @property (nonatomic) BOOL onScreenControlsAvailable;
 @property (nonatomic) BOOL usesFullBounds;

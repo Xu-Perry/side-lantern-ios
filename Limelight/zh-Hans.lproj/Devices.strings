@@ -18,6 +18,8 @@
 "settings" = "串流设置";
 "more" = "更多";
 "files" = "文件";
+"secondary_display" = "只看副屏";
+"wireless_display" = "无线副屏";
 "view_mode" = "观看模式";
 "terminal" = "终端";
 "pending" = "待实现";

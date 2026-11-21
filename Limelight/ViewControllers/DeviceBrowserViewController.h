@@ -7,6 +7,8 @@
 @property (nonatomic, weak) id<AppCallback> appDelegate;
 @property (nonatomic, copy) void (^openSettings)(TemporaryHost *host);
 @property (nonatomic, copy) void (^openDesktop)(TemporaryHost *host, UIView *source);
+@property (nonatomic, copy) void (^openSecondaryDisplay)(TemporaryHost *host, UIView *source);
+@property (nonatomic, copy) void (^openWirelessDisplay)(TemporaryHost *host, UIView *source);
 @property (nonatomic, copy) void (^openFiles)(TemporaryHost *host);
 @property (nonatomic, copy) BOOL (^supportsFiles)(TemporaryHost *host);
 @property (nonatomic, copy) void (^backToHosts)(void);

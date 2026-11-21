@@ -339,7 +339,6 @@ static void PinSidebarView(UIView *view, UIView *parent) {
     _settings = [_settingsStoryboard instantiateViewControllerWithIdentifier:@"settingsFrame"];
     _settings.streaming = YES;
     _settings.onScreenControlsAvailable = self.onScreenControlsAvailable;
-    [_settings configureStreamTargetsForHost:_host];
     _settings.changeHandler = ^{ if (weakSelf.settingsChanged) weakSelf.settingsChanged(); };
     _settings.videoSettingsChanged = ^(ManualVideoSettings *settings, ManualVideoFields fields) {
         if (weakSelf.videoSettingsChanged) weakSelf.videoSettingsChanged(settings, fields);
@@ -423,6 +422,11 @@ static void PinSidebarView(UIView *view, UIView *parent) {
 
 - (void)saveSettings {
     if (_settings.isViewLoaded) [_settings saveSettings];
+}
+
+- (void)setOnScreenControlsAvailable:(BOOL)onScreenControlsAvailable {
+    _onScreenControlsAvailable = onScreenControlsAvailable;
+    _settings.onScreenControlsAvailable = onScreenControlsAvailable;
 }
 
 - (void)updateManualVideoSettings:(ManualVideoSettings *)settings available:(BOOL)available updating:(BOOL)updating message:(NSString *)message {

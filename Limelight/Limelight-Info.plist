@@ -58,8 +58,6 @@
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>SideLantern uses the local network to connect to your PC for streaming.</string>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -69,16 +67,18 @@
 			<key>UIWindowSceneSessionRoleApplication</key>
 			<array>
 				<dict>
-					<key>UISceneConfigurationName</key>
-					<string>SideLantern</string>
 					<key>UISceneClassName</key>
 					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>SideLantern</string>
 					<key>UISceneDelegateClassName</key>
 					<string>SceneDelegate</string>
 				</dict>
 			</array>
 		</dict>
 	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>Launch Screen</string>
 	<key>UIRequiredDeviceCapabilities</key>

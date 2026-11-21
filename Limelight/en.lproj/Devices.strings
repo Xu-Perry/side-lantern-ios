@@ -18,6 +18,8 @@
 "settings" = "Stream settings";
 "more" = "More";
 "files" = "Files";
+"secondary_display" = "Secondary only";
+"wireless_display" = "Wireless display";
 "view_mode" = "View mode";
 "terminal" = "Terminal";
 "pending" = "Coming soon";

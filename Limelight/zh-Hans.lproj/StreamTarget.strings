@@ -9,7 +9,7 @@
 "target.choose_host" = "选择已配对的主机后可查看目标是否可用。所选模式仅在开始串流时应用。";
 "target.loading" = "正在查询 %@ 的串流目标…";
 "target.ready" = "所选模式将在开始串流时应用。暂不可用的目标无法启动。";
-"target.legacy" = "此主机不支持选择串流目标。主屏选项沿用主机原有串流配置；副屏模式需要支持此功能的 SideLantern。";
+"target.legacy" = "此主机不支持副屏模式。进入桌面可使用主机原有串流配置；只看副屏和无线副屏需要支持此功能的 SideLantern 服务端。";
 "target.error.discovery" = "无法确认此主机的显示模式。请检查连接和配对后重试。";
 "target.error.unknown_mode" = "主机无法识别此显示模式，请检查客户端和服务端的版本是否兼容。";
 "target.error.capture_busy" = "主机已有串流，请在现有串流结束后重试。当前会话不会被中断。";

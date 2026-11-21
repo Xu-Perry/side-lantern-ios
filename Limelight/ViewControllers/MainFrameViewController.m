@@ -52,6 +52,7 @@
     AppAssetManager* _appManager;
     StreamConfiguration* _streamConfig;
     UIAlertController* _pairAlert;
+    __weak UIAlertController *_appActionMenu;
     LoadingFrameViewController* _loadingFrame;
     UIScrollView* hostScrollView;
     FrontViewPosition currentPosition;
@@ -146,7 +147,6 @@ static NSMutableSet* hostList;
 - (void)openStreamSettingsForHost:(TemporaryHost *)host {
     if (self.navigationController.topViewController != self) return;
     SettingsViewController *settings = [self.storyboard instantiateViewControllerWithIdentifier:@"settingsFrame"];
-    [settings configureStreamTargetsForHost:host];
     [self.navigationController pushViewController:settings animated:YES];
 }
 
@@ -158,15 +158,29 @@ static NSMutableSet* hostList;
 }
 
 - (void)openDesktopForHost:(TemporaryHost *)host source:(UIView *)source {
+    [self openDesktopForHost:host source:source target:StreamTargetPrimaryDisplay];
+}
+
+- (void)startDesktopApp:(TemporaryApp *)app source:(UIView *)source target:(StreamTarget)target {
+    if (target == StreamTargetPrimaryDisplay) { [self appClicked:app view:source]; return; }
+    [_appManager stopRetrieving];
+    if (currentPosition != FrontViewPositionLeft) [[self revealViewController] revealToggleAnimated:NO];
+    [self prepareToStreamApp:app];
+    _streamConfig.sideLanternMode = StreamModeIdentifierForTarget(target);
+    _streamConfig.appName = NSLocalizedStringFromTable(target == StreamTargetSecondaryDisplay ? @"secondary_display" : @"wireless_display", @"Devices", nil);
+    [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+}
+
+- (void)openDesktopForHost:(TemporaryHost *)host source:(UIView *)source target:(StreamTarget)target {
     TemporaryApp *desktop = [DeviceBrowserViewController desktopApplicationForHost:host];
-    if (desktop) { [self appClicked:desktop view:source]; return; }
+    if (desktop) { [self startDesktopApp:desktop source:source target:target]; return; }
     UIAlertController *picker = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"desktop.choose", @"Devices", nil)
         message:nil preferredStyle:UIAlertControllerStyleActionSheet];
     for (TemporaryApp *app in [[host.appList allObjects] sortedArrayUsingSelector:@selector(compareName:)]) {
         [picker addAction:[UIAlertAction actionWithTitle:app.name style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
             [DeviceBrowserViewController setDesktopApplication:app forHost:host];
             [self->_deviceBrowser refreshArtwork];
-            [self appClicked:app view:source];
+            [self startDesktopApp:app source:source target:target];
         }]];
     }
     [picker addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"cancel", @"Devices", nil) style:UIAlertActionStyleCancel handler:nil]];
@@ -181,6 +195,8 @@ static NSMutableSet* hostList;
     __weak typeof(self) weakSelf = self;
     _deviceBrowser.openSettings = ^(TemporaryHost *host) { [weakSelf openStreamSettingsForHost:host]; };
     _deviceBrowser.openDesktop = ^(TemporaryHost *host, UIView *source) { [weakSelf openDesktopForHost:host source:source]; };
+    _deviceBrowser.openSecondaryDisplay = ^(TemporaryHost *host, UIView *source) { [weakSelf openDesktopForHost:host source:source target:StreamTargetSecondaryDisplay]; };
+    _deviceBrowser.openWirelessDisplay = ^(TemporaryHost *host, UIView *source) { [weakSelf openDesktopForHost:host source:source target:StreamTargetWirelessDisplay]; };
     _deviceBrowser.openFiles = ^(TemporaryHost *host) { [weakSelf openFileTransfersForHost:host]; };
     _deviceBrowser.backToHosts = ^{ [weakSelf showHostSelectionView]; };
     _deviceBrowser.didManageApps = ^{ MainFrameViewController *controller = weakSelf; if (controller) controller->_showHiddenApps = NO; };
@@ -740,7 +756,7 @@ static NSMutableSet* hostList;
     _streamConfig.appName = app.name;
     _streamConfig.serverCert = app.host.serverCert;
 #if !TARGET_OS_TV
-    _streamConfig.sideLanternMode = StreamModeIdentifierForTarget([[[StreamTargetPreferences alloc] init] selectedTarget]);
+    _streamConfig.sideLanternMode = StreamModeIdentifierForTarget(StreamTargetPrimaryDisplay);
 #endif
     
     DataManager* dataMan = [[DataManager alloc] init];
@@ -839,6 +855,9 @@ static NSMutableSet* hostList;
 }
 
 - (void)appLongClicked:(TemporaryApp *)app view:(UIView *)view {
+    UIViewController *presenter = [self activeViewController];
+    if (presenter == nil || [presenter isKindOfClass:UIAlertController.class] || presenter.isBeingPresented || presenter.isBeingDismissed ||
+        _appActionMenu.presentingViewController != nil || _appActionMenu.isBeingPresented || _appActionMenu.isBeingDismissed) return;
     Log(LOG_D, @"Long clicked app: %@", app.name);
     
     [_appManager stopRetrieving];
@@ -971,7 +990,9 @@ static NSMutableSet* hostList;
     alertController.popoverPresentationController.sourceView = view;
     
     alertController.popoverPresentationController.sourceRect = CGRectMake(view.bounds.size.width / 2.0, view.bounds.size.height / 2.0, 1.0, 1.0); // center of the view
-    [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
+    alertController.view.accessibilityIdentifier = @"app-action-menu";
+    _appActionMenu = alertController;
+    [presenter presentViewController:alertController animated:YES completion:nil];
 }
 
 - (void) appClicked:(TemporaryApp *)app view:(UIView *)view {
