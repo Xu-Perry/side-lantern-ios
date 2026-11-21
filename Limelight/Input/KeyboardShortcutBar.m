@@ -1,5 +1,14 @@
 #import "KeyboardShortcutBar.h"
 
+@interface KeyboardShortcutScrollView : UIScrollView
+@end
+@implementation KeyboardShortcutScrollView
+- (BOOL)touchesShouldCancelInContentView:(UIView *)view {
+    // A swipe that begins on a key must cancel its press and scroll the toolbar.
+    return YES;
+}
+@end
+
 @implementation KeyboardShortcutBar {
     KeyboardShortcutStore *_store;
     UIStackView *_keys;
@@ -12,11 +21,13 @@
         self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
         self.accessibilityIdentifier = @"keyboard-shortcut-toolbar";
         self.backgroundColor = UIColor.secondarySystemBackgroundColor;
-        UIScrollView *scroll = [[UIScrollView alloc] init];
+        UIScrollView *scroll = [[KeyboardShortcutScrollView alloc] init];
         scroll.translatesAutoresizingMaskIntoConstraints = NO;
         scroll.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
         scroll.alwaysBounceHorizontal = YES; scroll.showsHorizontalScrollIndicator = NO;
         scroll.delaysContentTouches = NO; scroll.directionalLockEnabled = YES;
+        scroll.canCancelContentTouches = YES;
+        scroll.clipsToBounds = YES;
         scroll.accessibilityIdentifier = @"keyboard-shortcut-scroll";
         _keys = [[UIStackView alloc] init]; _keys.axis = UILayoutConstraintAxisHorizontal; _keys.spacing = 6;
         _keys.translatesAutoresizingMaskIntoConstraints = NO;
@@ -64,6 +75,9 @@
         updated[NSFontAttributeName] = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline]; return updated;
     };
     button.configuration = configuration;
+    [button setContentCompressionResistancePriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
+    [button setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
+    button.titleLabel.numberOfLines = 1;
     [button.widthAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
     return button;
 }
