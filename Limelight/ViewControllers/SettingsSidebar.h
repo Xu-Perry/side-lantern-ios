@@ -1,7 +1,7 @@
 #import <UIKit/UIKit.h>
 #import "ManualVideoSettings.h"
 
-@class TemporaryHost, SettingsViewController;
+@class TemporaryHost, SettingsViewController, KeyboardShortcut;
 
 @interface SettingsSidebar : NSObject
 @property (nonatomic, readonly) SettingsViewController *settings;
@@ -12,6 +12,10 @@
 @property (nonatomic, copy) void (^exitStreamHandler)(void);
 @property (nonatomic, copy) void (^videoSettingsChanged)(ManualVideoSettings *settings, ManualVideoFields fields);
 @property (nonatomic) BOOL onScreenControlsAvailable;
+@property (nonatomic) BOOL keyboardVisible;
+@property (nonatomic, copy) void (^keyboardToggleHandler)(void);
+@property (nonatomic, copy) void (^keyboardShortcutHandler)(KeyboardShortcut *shortcut);
+@property (nonatomic, copy) void (^shortcutEditingHandler)(void);
 - (instancetype)initWithParent:(UIViewController *)parent;
 - (instancetype)initWithParent:(UIViewController *)parent overlayParent:(UIViewController *)overlayParent;
 - (void)showForHost:(TemporaryHost *)host frame:(CGRect)frame streaming:(BOOL)streaming;

@@ -17,6 +17,12 @@ typedef NS_OPTIONS(NSUInteger, ManualVideoFields) {
 - (ManualVideoSettings *)replacingFields:(ManualVideoFields)fields withSettings:(ManualVideoSettings *)settings;
 @end
 
+// Converts Moonlight's configured bandwidth budget to the encoder-only API value.
+@interface ManualVideoBitrateBudget : NSObject
+- (instancetype)initWithBudget:(NSInteger)budget encoderBitrate:(NSInteger)encoderBitrate audioChannels:(NSInteger)audioChannels;
+- (NSInteger)encoderBitrateForBudget:(NSInteger)budget;
+@end
+
 @interface ManualVideoResponse : HttpResponse <NSXMLParserDelegate>
 @property (nonatomic, readonly) BOOL validSession;
 @property (nonatomic, readonly) NSString *sessionIdentifier;

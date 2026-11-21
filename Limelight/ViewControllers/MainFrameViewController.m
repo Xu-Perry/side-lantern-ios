@@ -30,6 +30,10 @@
 #if !TARGET_OS_TV
 #import "StreamModesResponse.h"
 #import "SettingsViewController.h"
+#import "FileTransferViewController.h"
+#import "FileTransferClient.h"
+#import "FileTransferManager.h"
+#import "DeviceBrowserViewController.h"
 #else
 #import <sys/utsname.h>
 #endif
@@ -50,12 +54,13 @@
     UIAlertController* _pairAlert;
     LoadingFrameViewController* _loadingFrame;
     UIScrollView* hostScrollView;
-    UILabel *_hostDiscoveryLabel;
-    CGSize _hostLayoutSize;
     FrontViewPosition currentPosition;
     NSArray* _sortedAppList;
     NSCache* _boxArtCache;
     bool _background;
+#if !TARGET_OS_TV
+    DeviceBrowserViewController *_deviceBrowser;
+#endif
 #if TARGET_OS_TV
     UITapGestureRecognizer* _menuRecognizer;
 #endif
@@ -127,6 +132,7 @@ static NSMutableSet* hostList;
 
 - (void)enableUpButton {
 #if !TARGET_OS_TV
+    if (_deviceBrowser) return;
     self->_upButton.title = NSLocalizedStringFromTable(@"hosts.choose", @"StreamTarget", nil);
     self.navigationItem.rightBarButtonItem = self->_upButton;
 #endif
@@ -134,10 +140,61 @@ static NSMutableSet* hostList;
 
 #if !TARGET_OS_TV
 - (void)openStreamSettings {
+    [self openStreamSettingsForHost:_selectedHost];
+}
+
+- (void)openStreamSettingsForHost:(TemporaryHost *)host {
     if (self.navigationController.topViewController != self) return;
     SettingsViewController *settings = [self.storyboard instantiateViewControllerWithIdentifier:@"settingsFrame"];
-    [settings configureStreamTargetsForHost:_selectedHost];
+    [settings configureStreamTargetsForHost:host];
     [self.navigationController pushViewController:settings animated:YES];
+}
+
+- (void)openFileTransfersForHost:(TemporaryHost *)host {
+    FileTransferViewController *files = [[FileTransferViewController alloc] initWithHost:host];
+    UINavigationController *navigation = [[UINavigationController alloc] initWithRootViewController:files];
+    navigation.modalPresentationStyle = UIModalPresentationFullScreen;
+    [[self activeViewController] presentViewController:navigation animated:YES completion:nil];
+}
+
+- (void)openDesktopForHost:(TemporaryHost *)host source:(UIView *)source {
+    TemporaryApp *desktop = [DeviceBrowserViewController desktopApplicationForHost:host];
+    if (desktop) { [self appClicked:desktop view:source]; return; }
+    UIAlertController *picker = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"desktop.choose", @"Devices", nil)
+        message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    for (TemporaryApp *app in [[host.appList allObjects] sortedArrayUsingSelector:@selector(compareName:)]) {
+        [picker addAction:[UIAlertAction actionWithTitle:app.name style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            [DeviceBrowserViewController setDesktopApplication:app forHost:host];
+            [self->_deviceBrowser refreshArtwork];
+            [self appClicked:app view:source];
+        }]];
+    }
+    [picker addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"cancel", @"Devices", nil) style:UIAlertActionStyleCancel handler:nil]];
+    picker.popoverPresentationController.sourceView = source ?: self.view;
+    picker.popoverPresentationController.sourceRect = (source ?: self.view).bounds;
+    [[self activeViewController] presentViewController:picker animated:YES completion:nil];
+}
+
+- (void)configureDeviceBrowser {
+    _deviceBrowser = [[DeviceBrowserViewController alloc] initWithArtworkCache:_boxArtCache];
+    _deviceBrowser.hostDelegate = self; _deviceBrowser.appDelegate = self;
+    __weak typeof(self) weakSelf = self;
+    _deviceBrowser.openSettings = ^(TemporaryHost *host) { [weakSelf openStreamSettingsForHost:host]; };
+    _deviceBrowser.openDesktop = ^(TemporaryHost *host, UIView *source) { [weakSelf openDesktopForHost:host source:source]; };
+    _deviceBrowser.openFiles = ^(TemporaryHost *host) { [weakSelf openFileTransfersForHost:host]; };
+    _deviceBrowser.backToHosts = ^{ [weakSelf showHostSelectionView]; };
+    _deviceBrowser.didManageApps = ^{ MainFrameViewController *controller = weakSelf; if (controller) controller->_showHiddenApps = NO; };
+    _deviceBrowser.supportsFiles = ^BOOL(TemporaryHost *host) {
+        if (host.state != StateOnline || host.pairState != PairStatePaired || !host.serverCert || !host.activeAddress) return NO;
+        FileTransferManager *manager = FileTransferManagerForHost(host);
+        if (!manager.capabilitiesProbed) [manager refreshCapabilities:nil];
+        return manager.capabilities != nil;
+    };
+    [self addChildViewController:_deviceBrowser];
+    self.collectionView.backgroundView = _deviceBrowser.view;
+    [_deviceBrowser didMoveToParentViewController:self];
+    self.collectionView.scrollEnabled = NO;
+    self.collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
 }
 #endif
 
@@ -316,7 +373,12 @@ static NSMutableSet* hostList;
     [self disableUpButton];
     
     [self.collectionView reloadData];
+#if !TARGET_OS_TV
+    [_deviceBrowser showHosts];
+    if (!_background) [_discMan refreshDiscovery];
+#else
     [self.view addSubview:hostScrollView];
+#endif
 }
 
 - (void) receivedAssetForApp:(TemporaryApp*)app {
@@ -325,7 +387,11 @@ static NSMutableSet* hostList;
     [self updateBoxArtCacheForApp:app];
     
     dispatch_async(dispatch_get_main_queue(), ^{
+#if !TARGET_OS_TV
+        [self->_deviceBrowser refreshArtwork];
+#else
         [self.collectionView reloadData];
+#endif
     });
 }
 
@@ -459,6 +525,27 @@ static NSMutableSet* hostList;
 }
 
 - (void)hostLongClicked:(TemporaryHost *)host view:(UIView *)view {
+#if !TARGET_OS_TV
+    if (host.state == StateOnline && host.pairState == PairStatePaired && host.serverCert) {
+        FileTransferManager *manager = FileTransferManagerForHost(host);
+        if (!manager.capabilitiesProbed) {
+            __weak typeof(self) weakSelf = self;
+            [manager refreshCapabilities:^{
+                MainFrameViewController *controller = weakSelf;
+                if (controller.view.window && controller.navigationController.topViewController == controller &&
+                    !controller.presentedViewController && !controller.view.window.rootViewController.presentedViewController) {
+                    [controller presentHostActions:host view:view.window ? view : controller.view];
+                }
+            }];
+            return;
+        }
+        if (manager.capabilityError) [manager refreshCapabilities:nil];
+    }
+#endif
+    [self presentHostActions:host view:view];
+}
+
+- (void)presentHostActions:(TemporaryHost *)host view:(UIView *)view {
     Log(LOG_D, @"Long clicked host: %@", host.name);
     NSString* message;
     
@@ -485,6 +572,12 @@ static NSMutableSet* hostList;
     }
     
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:message preferredStyle:UIAlertControllerStyleActionSheet];
+#if !TARGET_OS_TV
+    if (_selectedHost == host) {
+        [longClickAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"settings", @"Devices", nil)
+            style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) { [self openStreamSettingsForHost:host]; }]];
+    }
+#endif
     if (host.state != StateOnline) {
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Wake PC" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             UIAlertController* wolAlert = [UIAlertController alertControllerWithTitle:@"Wake-On-LAN" message:@"" preferredStyle:UIAlertControllerStyleAlert];
@@ -507,6 +600,13 @@ static NSMutableSet* hostList;
         }]];
         
 #if !TARGET_OS_TV
+        FileTransferManager *transfers = FileTransferManagerForHost(host);
+        if (transfers.capabilities) {
+            [longClickAlert addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTable(@"title", @"FileTransfer", nil)
+                style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+                [self openFileTransfersForHost:host];
+            }]];
+        }
         if (host.isNvidiaServerSoftware) {
             [longClickAlert addAction:[UIAlertAction actionWithTitle:@"NVIDIA GameStream End-of-Service" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
                 [Utils launchUrl:@"https://github.com/moonlight-stream/moonlight-docs/wiki/NVIDIA-GameStream-End-Of-Service-Announcement-FAQ"];
@@ -561,6 +661,10 @@ static NSMutableSet* hostList;
             [hostList removeObject:host];
             [self updateAllHosts:[hostList allObjects]];
         }
+#if !TARGET_OS_TV
+        if (self->_selectedHost == host) [self showHostSelectionView];
+        else if (!self->_background) [self->_discMan refreshDiscovery];
+#endif
         
     }]];
     [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
@@ -574,7 +678,12 @@ static NSMutableSet* hostList;
 
 - (void) addHostClicked {
     Log(LOG_D, @"Clicked add host");
+#if !TARGET_OS_TV
+    UIAlertController* alertController = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTable(@"devices.add", @"Devices", nil)
+        message:NSLocalizedStringFromTable(@"devices.add_address", @"Devices", nil) preferredStyle:UIAlertControllerStyleAlert];
+#else
     UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Add Host Manually" message:@"If Moonlight doesn't find your local gaming PC automatically,\nenter the IP address of your PC" preferredStyle:UIAlertControllerStyleAlert];
+#endif
     [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
     [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
         NSString* hostAddress = [((UITextField*)[[alertController textFields] objectAtIndex:0]).text trim];
@@ -610,7 +719,15 @@ static NSMutableSet* hostList;
             });
         }];
     }]];
-    [alertController addTextFieldWithConfigurationHandler:nil];
+    [alertController addTextFieldWithConfigurationHandler:^(UITextField *field) {
+        field.autocapitalizationType = UITextAutocapitalizationTypeNone;
+        field.autocorrectionType = UITextAutocorrectionTypeNo;
+        field.spellCheckingType = UITextSpellCheckingTypeNo;
+#if !TARGET_OS_TV
+        field.placeholder = NSLocalizedStringFromTable(@"devices.address_placeholder", @"Devices", nil);
+        field.keyboardType = UIKeyboardTypeURL;
+#endif
+    }];
     [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
 }
 
@@ -871,7 +988,14 @@ static NSMutableSet* hostList;
     }
 #endif
     
-    if ([self findRunningApp:app.host]) {
+    BOOL showRunningAppMenu = [self findRunningApp:app.host] != nil;
+#if !TARGET_OS_TV
+    // The desktop entry connects immediately. StreamManager queries the host
+    // and chooses launch or resume without stopping its running application.
+    TemporaryApp *desktop = [DeviceBrowserViewController desktopApplicationForHost:app.host];
+    if ([app.id isEqualToString:desktop.id]) showRunningAppMenu = NO;
+#endif
+    if (showRunningAppMenu) {
         // If there's a running app, display a menu
         [self appLongClicked:app view:view];
     } else {
@@ -920,7 +1044,11 @@ static NSMutableSet* hostList;
 - (void)adjustScrollViewForSafeArea:(UIScrollView*)view {
     if (@available(iOS 11.0, *)) {
         view.contentInset = UIEdgeInsetsZero;
+#if !TARGET_OS_TV
+        view.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+#else
         view.contentInsetAdjustmentBehavior = view == hostScrollView ? UIScrollViewContentInsetAdjustmentNever : UIScrollViewContentInsetAdjustmentAutomatic;
+#endif
     }
 }
 
@@ -938,21 +1066,9 @@ static NSMutableSet* hostList;
         
 #if !TARGET_OS_TV
     self.edgesForExtendedLayout = UIRectEdgeNone;
-    self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
-    self.navigationController.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    self.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
     self.collectionView.backgroundColor = UIColor.systemBackgroundColor;
-    UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
-    [appearance configureWithOpaqueBackground];
-    appearance.backgroundColor = UIColor.systemBackgroundColor;
-    appearance.titleTextAttributes = @{NSForegroundColorAttributeName:UIColor.labelColor};
-    self.navigationController.navigationBar.standardAppearance = appearance;
-    self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
-    self.navigationController.navigationBar.compactAppearance = appearance;
-    UIBarButtonItem *settings = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"gearshape"]
-        style:UIBarButtonItemStylePlain target:self action:@selector(openStreamSettings)];
-    settings.accessibilityLabel = NSLocalizedStringFromTable(@"settings.title", @"StreamTarget", nil);
-    settings.accessibilityIdentifier = @"home-stream-settings";
-    self.navigationItem.leftBarButtonItem = settings;
+    self.navigationItem.leftBarButtonItem = nil;
     
     // Set the host name button action. When it's tapped, it'll show the host selection view.
     [_upButton setTarget:self];
@@ -996,19 +1112,15 @@ static NSMutableSet* hostList;
     }
     
     _boxArtCache = [[NSCache alloc] init];
+#if !TARGET_OS_TV
+    [self configureDeviceBrowser];
+#endif
         
     hostScrollView = [[ComputerScrollView alloc] init];
     hostScrollView.frame = CGRectMake(0, self.navigationController.navigationBar.frame.origin.y + self.navigationController.navigationBar.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
     [hostScrollView setShowsHorizontalScrollIndicator:NO];
     hostScrollView.delaysContentTouches = NO;
     hostScrollView.directionalLockEnabled = YES;
-    _hostDiscoveryLabel = [[UILabel alloc] init];
-    _hostDiscoveryLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
-    _hostDiscoveryLabel.adjustsFontForContentSizeCategory = YES;
-    _hostDiscoveryLabel.text = NSLocalizedStringFromTable(@"hosts.searching", @"StreamTarget", nil);
-    _hostDiscoveryLabel.textColor = UIColor.secondaryLabelColor;
-    _hostDiscoveryLabel.textAlignment = NSTextAlignmentCenter;
-    _hostDiscoveryLabel.numberOfLines = 0;
     
     self.collectionView.delaysContentTouches = NO;
     self.collectionView.allowsMultipleSelection = NO;
@@ -1024,6 +1136,7 @@ static NSMutableSet* hostList;
     [self retrieveSavedHosts];
     _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
         
+#if TARGET_OS_TV
     if ([hostList count] == 1) {
         [self hostClicked:[hostList anyObject] view:nil];
     }
@@ -1031,6 +1144,10 @@ static NSMutableSet* hostList;
         [self updateTitle];
         [self.view addSubview:hostScrollView];
     }
+#else
+    [self updateTitle];
+    [self updateHosts];
+#endif
 }
 
 #if TARGET_OS_TV
@@ -1127,12 +1244,14 @@ static NSMutableSet* hostList;
     [[self revealViewController] setPrimaryViewController:self];
 #endif
     
+#if TARGET_OS_TV
     [self.navigationController setNavigationBarHidden:NO animated:YES];
     
     // Hide 1px border line
     UIImage* fakeImage = [[UIImage alloc] init];
     [self.navigationController.navigationBar setShadowImage:fakeImage];
     [self.navigationController.navigationBar setBackgroundImage:fakeImage forBarPosition:UIBarPositionAny barMetrics:UIBarMetricsDefault];
+#endif
     
     // Check for a pending shortcut action when appearing
     [self handlePendingShortcutAction];
@@ -1151,6 +1270,9 @@ static NSMutableSet* hostList;
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
+#if !TARGET_OS_TV
+    [self setNeedsStatusBarAppearanceUpdate];
+#endif
     
     // We can get here on home press while streaming
     // since the stream view segues to us just before
@@ -1249,6 +1371,17 @@ static NSMutableSet* hostList;
 
 - (void)updateHosts {
     Log(LOG_I, @"Updating hosts...");
+#if !TARGET_OS_TV
+    NSArray *sortedHosts;
+    @synchronized (hostList) { sortedHosts = [[hostList allObjects] sortedArrayUsingSelector:@selector(compareName:)]; }
+    [_deviceBrowser updateHosts:sortedHosts];
+    for (TemporaryHost *host in sortedHosts) {
+        for (TemporaryApp *app in host.appList) {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{ [self updateBoxArtCacheForApp:app]; });
+        }
+    }
+    [self updateHostShortcuts]; [self updateTitle];
+#else
     [[hostScrollView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
     UIComputerView* addComp = [[UIComputerView alloc] initForAddWithCallback:self];
     UIComputerView* compView;
@@ -1282,58 +1415,8 @@ static NSMutableSet* hostList;
     
     [hostScrollView addSubview:addComp];
     [hostScrollView setContentSize:CGSizeMake(prevEdge + addComp.frame.size.width, hostScrollView.frame.size.height)];
-#if !TARGET_OS_TV
-    if (hostList.count == 0) {
-        [hostScrollView addSubview:_hostDiscoveryLabel];
-    }
-    [self layoutHostViews];
 #endif
 }
-
-#if !TARGET_OS_TV
-- (void)viewDidLayoutSubviews {
-    [super viewDidLayoutSubviews];
-    CGRect frame = self.view.safeAreaLayoutGuide.layoutFrame;
-    hostScrollView.frame = frame;
-    if (!CGSizeEqualToSize(_hostLayoutSize, frame.size)) {
-        _hostLayoutSize = frame.size;
-        [self layoutHostViews];
-    }
-}
-
-- (void)layoutHostViews {
-    NSMutableArray<UIComputerView *> *views = [[NSMutableArray alloc] init];
-    CGFloat totalWidth = 0;
-    CGFloat maxHeight = 0;
-    for (UIView *view in hostScrollView.subviews) {
-        if ([view isKindOfClass:UIComputerView.class]) {
-            [views addObject:(UIComputerView *)view];
-            totalWidth += view.bounds.size.width;
-            maxHeight = MAX(maxHeight, view.bounds.size.height);
-        }
-    }
-    CGFloat gap = 28;
-    totalWidth += MAX(0, (NSInteger)views.count - 1) * gap;
-    CGFloat width = hostScrollView.bounds.size.width;
-    CGFloat height = hostScrollView.bounds.size.height;
-    CGFloat x = MAX(16, (width - totalWidth) / 2);
-    BOOL showStatus = _hostDiscoveryLabel.superview == hostScrollView;
-    CGFloat centerY = MAX(maxHeight / 2 + 20, (height - (showStatus ? 70 : 0)) / 2);
-    for (UIComputerView *view in views) {
-        view.center = CGPointMake(x + view.bounds.size.width / 2, centerY);
-        x += view.bounds.size.width + gap;
-    }
-    CGFloat contentHeight = height;
-    if (showStatus) {
-        CGFloat textWidth = MAX(1, MIN(520, width - 32));
-        CGFloat textHeight = ceil([_hostDiscoveryLabel sizeThatFits:CGSizeMake(textWidth, CGFLOAT_MAX)].height);
-        _hostDiscoveryLabel.frame = CGRectMake(MAX(16, (width - textWidth) / 2), centerY + maxHeight / 2 + 20, textWidth, textHeight);
-        contentHeight = MAX(height, CGRectGetMaxY(_hostDiscoveryLabel.frame) + 20);
-    }
-    hostScrollView.contentSize = CGSizeMake(MAX(width, x - gap + 16), contentHeight);
-}
-
-#endif
 
 - (float) getCompViewX:(UIComputerView*)comp addComp:(UIComputerView*)addComp prevEdge:(float)prevEdge {
     float padding;
@@ -1418,7 +1501,11 @@ static NSMutableSet* hostList;
     }
     
     [hostScrollView removeFromSuperview];
+#if !TARGET_OS_TV
+    [_deviceBrowser showHost:host allApps:_showHiddenApps];
+#else
     [self.collectionView reloadData];
+#endif
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
@@ -1458,12 +1545,16 @@ static NSMutableSet* hostList;
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+#if !TARGET_OS_TV
+    return 0;
+#else
     if (_selectedHost != nil && _sortedAppList != nil) {
         return _sortedAppList.count;
     }
     else {
         return 0;
     }
+#endif
 }
 
 - (void)didReceiveMemoryWarning
@@ -1490,11 +1581,17 @@ static NSMutableSet* hostList;
 #endif
 
 - (void) disableNavigation {
+#if !TARGET_OS_TV
+    [_deviceBrowser setInteractionEnabled:NO];
+#endif
     self.navigationController.navigationBar.topItem.rightBarButtonItem.enabled = NO;
     self.navigationController.navigationBar.topItem.leftBarButtonItem.enabled = NO;
 }
 
 - (void) enableNavigation {
+#if !TARGET_OS_TV
+    [_deviceBrowser setInteractionEnabled:YES];
+#endif
     self.navigationController.navigationBar.topItem.rightBarButtonItem.enabled = YES;
     self.navigationController.navigationBar.topItem.leftBarButtonItem.enabled = YES;
 }

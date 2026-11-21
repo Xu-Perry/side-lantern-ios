@@ -25,8 +25,76 @@ static void Drain(NSMutableArray *scheduled) {
         operation();
     }
 }
+static void CheckOfficialBitrateBudget(void) {
+    ManualVideoBitrateBudget *highQuality = [[ManualVideoBitrateBudget alloc] initWithBudget:80000 encoderBitrate:62988 audioChannels:2];
+    assert([highQuality encoderBitrateForBudget:80000] == 62988);
+    assert([highQuality encoderBitrateForBudget:40000] == 30988);
+    assert([highQuality encoderBitrateForBudget:70000] == 54988);
+    ManualVideoBitrateBudget *lowQuality = [[ManualVideoBitrateBudget alloc] initWithBudget:80000 encoderBitrate:71308 audioChannels:2];
+    assert([lowQuality encoderBitrateForBudget:40000] == 35308); // 10% FEC and normal stereo audio.
+    ManualVideoBitrateBudget *surround = [[ManualVideoBitrateBudget alloc] initWithBudget:80000 encoderBitrate:61964 audioChannels:6];
+    assert([surround encoderBitrateForBudget:40000] == 29964);
+    assert([highQuality encoderBitrateForBudget:499] == 0);
+    ManualVideoBitrateBudget *limited = [[ManualVideoBitrateBudget alloc] initWithBudget:80000 encoderBitrate:50000 audioChannels:2];
+    assert([limited encoderBitrateForBudget:80000] == 50000);
+    assert([limited encoderBitrateForBudget:40000] < 25000);
+
+    NSInteger savedBudget = 80000;
+    for (NSUInteger connection = 0; connection < 2; connection++) {
+        NSString *session = connection == 0 ? @"101" : @"102";
+        __block ManualVideoSettings *current = Settings(2388, 1668, 120, savedBudget * 8 / 10 - 1012);
+        __block ManualVideoSettings *pending = nil;
+        __block NSUInteger posts = 0;
+        __block ManualVideoFields committed = 0;
+        NSMutableArray *scheduled = [NSMutableArray array];
+        ManualVideoController *controller = [[ManualVideoController alloc] initWithTransport:^(NSString *identifier, ManualVideoSettings *settings, void (^done)(ManualVideoResponse *)) {
+            if (settings) {
+                assert([identifier isEqualToString:session]);
+                assert(settings.width == 2388 && settings.height == 1668 && settings.frameRate == 120);
+                posts++;
+                pending = settings;
+                done(Response(202, @"pending", session, current));
+            } else {
+                if (pending) { current = pending; pending = nil; }
+                done(Response(200, posts ? @"applied" : @"idle", session, current));
+            }
+        } schedule:^(NSTimeInterval delay, void (^operation)(void)) { [scheduled addObject:[operation copy]]; }];
+        controller.stateChanged = ^(ManualVideoController *state) { committed |= state.appliedFields; };
+        [controller refreshWithBitrateBudget:savedBudget audioChannels:2];
+        assert(posts == 0 && controller.state == ManualVideoReady);
+        assert(controller.response.settings.bitrate != savedBudget);
+        [controller refresh];
+        assert(posts == 0 && committed == 0); // Discovery and sidebar refresh never change encoder bitrate.
+        [controller requestSettings:current fields:ManualVideoBitrate bitrateBudget:savedBudget];
+        assert(posts == 0); // Choosing the existing budget is a no-op.
+        savedBudget = connection == 0 ? 40000 : 20000;
+        [controller requestSettings:Settings(640, 360, 30, savedBudget) fields:ManualVideoBitrate bitrateBudget:savedBudget];
+        assert(posts == 1 && controller.state == ManualVideoApplying && committed == 0);
+        Drain(scheduled);
+        assert(controller.state == ManualVideoReady && current.bitrate == savedBudget * 8 / 10 - 1012);
+        assert(committed == ManualVideoBitrate);
+        [controller refresh];
+        assert(posts == 1);
+        [controller cancel];
+    }
+    assert(savedBudget == 20000); // Stored budget never becomes the smaller encoder-only value.
+
+    __block void (^queryReply)(ManualVideoResponse *);
+    __block NSUInteger cancelledPosts = 0;
+    ManualVideoController *cancelled = [[ManualVideoController alloc] initWithTransport:^(NSString *identifier, ManualVideoSettings *settings, void (^done)(ManualVideoResponse *)) {
+        if (settings) cancelledPosts++;
+        else queryReply = [done copy];
+    } schedule:nil];
+    [cancelled refreshWithBitrateBudget:80000 audioChannels:2];
+    [cancelled cancel];
+    queryReply(Response(200, @"idle", @"105", Settings(1920, 1080, 60, 62988)));
+    assert(cancelledPosts == 0 && !cancelled.available);
+    queryReply = nil;
+}
+
 int main(void) {
     @autoreleasepool {
+        CheckOfficialBitrateBudget();
         ManualVideoSettings *original = Settings(1920, 1080, 60, 9000);
         NSString *xml = @"<root version=\"1\" status_code=\"200\"><session_id>42</session_id><width>1920</width><height>1080</height><fps>60</fps><bitrate_kbps>9000</bitrate_kbps><status>idle</status></root>";
         assert(Parse(xml).validSession);
@@ -140,11 +208,17 @@ int main(void) {
         } schedule:nil];
         [limit refresh]; [limit requestSettings:Settings(1920,1080,60,5000) fields:ManualVideoBitrate];
         assert(limit.state == ManualVideoFailed && limit.appliedFields == 0 && [limit.response.settings isEqual:original]);
+        __block ManualVideoFields restoreCommits = 0;
+        limit.stateChanged = ^(ManualVideoController *state) { restoreCommits |= state.appliedFields; };
+        [limit refreshWithBitrateBudget:80000 audioChannels:2];
+        [limit requestSettings:original fields:ManualVideoBitrate bitrateBudget:120000];
+        assert(limit.state == ManualVideoFailed && restoreCommits == 0 && [limit.response.settings isEqual:original]);
 
         ManualVideoController *unsupported = [[ManualVideoController alloc] initWithTransport:^(NSString *identifier, ManualVideoSettings *settings, void (^done)(ManualVideoResponse *)) {
+            assert(settings == nil);
             done(Parse(@"<root version=\"1\" status_code=\"404\"><status>no_manual_video_session</status></root>"));
         } schedule:nil];
-        [unsupported refresh]; assert(unsupported.state == ManualVideoUnavailable && !unsupported.available);
+        [unsupported refreshWithBitrateBudget:80000 audioChannels:2]; assert(unsupported.state == ManualVideoUnavailable && !unsupported.available);
 
         __block BOOL accepted = NO;
         ManualVideoController *timeout = [[ManualVideoController alloc] initWithTransport:^(NSString *identifier, ManualVideoSettings *settings, void (^done)(ManualVideoResponse *)) {

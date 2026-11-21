@@ -7,6 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
+#if !TARGET_OS_TV
+@class KeyboardShortcut;
+#endif
 
 @interface KeyboardSupport : NSObject
 
@@ -19,5 +22,10 @@ struct KeyEvent {
 + (BOOL)sendKeyEventForPress:(UIPress*)press down:(BOOL)down API_AVAILABLE(ios(13.4));
 + (BOOL)sendKeyEvent:(UIKey*)key down:(BOOL)down API_AVAILABLE(ios(13.4));
 + (struct KeyEvent) translateKeyEvent:(unichar) inputChar withModifierFlags:(UIKeyModifierFlags)modifierFlags;
+#if !TARGET_OS_TV
++ (void)sendShortcut:(KeyboardShortcut *)shortcut;
++ (void)sendVirtualKey:(unsigned short)keyCode modifiers:(NSUInteger)modifiers;
++ (void)sendVirtualKey:(unsigned short)keyCode down:(BOOL)down modifiers:(NSUInteger)modifiers;
+#endif
 
 @end

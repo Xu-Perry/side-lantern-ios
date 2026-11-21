@@ -85,7 +85,8 @@
 // the Add PC dialog. This is required to comply with Apple App Store
 // Guideline 4.2.7a.
 + (BOOL) isProhibitedAddress:(NSString*)address {
-#ifdef ENABLE_APP_STORE_RESTRICTIONS
+    // SideLantern iOS allows WAN hosts in both Debug and Release builds.
+#if defined(ENABLE_APP_STORE_RESTRICTIONS) && !defined(SIDELANTERN_ALLOW_WAN_HOSTS)
     struct addrinfo hints;
     struct addrinfo* result;
     int err;
@@ -211,6 +212,14 @@
 - (void) resetDiscoveryState {
     // Allow us to rediscover hosts that were already found before
     [_mdnsMan forgetHosts];
+}
+
+- (void)refreshDiscovery {
+    // Restart Bonjour without interrupting polling of the remaining hosts.
+    [_mdnsMan stopSearching];
+    [_mdnsMan forgetHosts];
+    if (shouldDiscover) [_mdnsMan searchForHosts];
+    else [self startDiscovery];
 }
 
 - (void) startDiscovery {

@@ -8,8 +8,39 @@
 
 #import "KeyboardSupport.h"
 #include <Limelight.h>
+#include <unistd.h>
+#if !TARGET_OS_TV
+#import "KeyboardShortcut.h"
+
+static void SendShortcutEvents(NSArray<NSDictionary *> *events) {
+    static dispatch_queue_t queue;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{ queue = dispatch_queue_create("com.sidelantern.keyboard-shortcuts", DISPATCH_QUEUE_SERIAL); });
+    dispatch_async(queue, ^{
+        for (NSUInteger index = 0; index < events.count; index++) {
+            NSDictionary *event = events[index];
+            LiSendKeyboardEvent([event[@"keyCode"] unsignedShortValue],
+                [event[@"down"] boolValue] ? KEY_ACTION_DOWN : KEY_ACTION_UP, [event[@"modifiers"] unsignedCharValue]);
+            // Keep the key down briefly without blocking UIKit's main thread.
+            if (index + 1 < events.count && [event[@"down"] boolValue] && ![events[index + 1][@"down"] boolValue] &&
+                [event[@"keyCode"] isEqual:events[index + 1][@"keyCode"]]) usleep(50 * 1000);
+        }
+    });
+}
+#endif
 
 @implementation KeyboardSupport
+
+#if !TARGET_OS_TV
++ (void)sendShortcut:(KeyboardShortcut *)shortcut { SendShortcutEvents(shortcut.keyEvents); }
++ (void)sendVirtualKey:(unsigned short)keyCode modifiers:(NSUInteger)modifiers {
+    SendShortcutEvents(@[@{@"keyCode":@(keyCode | 0x8000), @"down":@YES, @"modifiers":@(modifiers)},
+        @{@"keyCode":@(keyCode | 0x8000), @"down":@NO, @"modifiers":@(modifiers)}]);
+}
++ (void)sendVirtualKey:(unsigned short)keyCode down:(BOOL)down modifiers:(NSUInteger)modifiers {
+    SendShortcutEvents(@[@{@"keyCode":@(keyCode | 0x8000), @"down":@(down), @"modifiers":@(modifiers)}]);
+}
+#endif
 
 + (BOOL)sendKeyEventForPress:(UIPress*)press down:(BOOL)down API_AVAILABLE(ios(13.4)) {
     if (press.key != nil) {

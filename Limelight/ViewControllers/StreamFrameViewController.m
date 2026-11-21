@@ -18,6 +18,12 @@
 #import "StreamWorkspaceViewController.h"
 #import "ManualVideoController.h"
 #import "HttpManager.h"
+
+static BOOL StreamHasTextResponder(UIView *view) {
+    if (view.isFirstResponder && [view conformsToProtocol:@protocol(UITextInput)]) return YES;
+    for (UIView *child in view.subviews) if (StreamHasTextResponder(child)) return YES;
+    return NO;
+}
 #endif
 
 #include <sys/socket.h>
@@ -61,6 +67,7 @@
     UIView *_controlsSurface;
     SettingsSidebar *_settingsSidebar;
     StreamWorkspaceViewController *_workspace;
+    UILayoutGuide *_keyboardViewportGuide;
     ManualVideoController *_manualVideoController;
     BOOL _separateControls;
     BOOL _connectionStarted;
@@ -81,6 +88,10 @@
 #endif
 }
 
+#if !TARGET_OS_TV
+- (BOOL)prefersStatusBarHidden { return YES; }
+#endif
+
 #if TARGET_OS_TV
 - (void)controllerPauseButtonPressed:(id)sender { }
 - (void)controllerPauseButtonDoublePressed:(id)sender {
@@ -98,7 +109,9 @@
 {
     [super viewDidLoad];
     
+#if TARGET_OS_TV
     [self.navigationController setNavigationBarHidden:YES animated:YES];
+#endif
     
     [UIApplication sharedApplication].idleTimerDisabled = YES;
     
@@ -260,9 +273,37 @@
     _workspace.layoutChanged = ^{ [weakSelf.view setNeedsLayout]; };
     _settingsSidebar.settingsChanged = ^{ [weakSelf applyLiveSettings]; };
     _settingsSidebar.exitStreamHandler = ^{ [weakSelf returnToMainFrame]; };
+    _settingsSidebar.keyboardToggleHandler = ^{ [weakSelf toggleStreamKeyboard]; };
+    _settingsSidebar.keyboardShortcutHandler = ^(KeyboardShortcut *shortcut) {
+        StreamFrameViewController *controller = weakSelf;
+        if (controller) [controller->_streamView sendKeyboardShortcut:shortcut];
+    };
+    _settingsSidebar.shortcutEditingHandler = ^{
+        StreamFrameViewController *controller = weakSelf;
+        if (controller) { [controller.view endEditing:YES]; [controller->_streamView hideKeyboard]; }
+    };
+    _keyboardViewportGuide = [[UILayoutGuide alloc] init];
+    [self.view addLayoutGuide:_keyboardViewportGuide];
+    [NSLayoutConstraint activateConstraints:@[
+        [_keyboardViewportGuide.topAnchor constraintEqualToAnchor:self.view.topAnchor],
+        [_keyboardViewportGuide.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+        [_keyboardViewportGuide.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        [_keyboardViewportGuide.bottomAnchor constraintEqualToAnchor:self.view.keyboardLayoutGuide.topAnchor]]];
+    _streamView.keyboardVisibilityChanged = ^(BOOL visible) {
+        StreamFrameViewController *controller = weakSelf;
+        if (!controller) return;
+        if (visible) [controller->_settingsSidebar close];
+        [controller refreshKeyboardState];
+        [controller.view setNeedsLayout];
+    };
+    for (NSNotificationName name in @[UIKeyboardDidShowNotification, UIKeyboardDidHideNotification, UIKeyboardDidChangeFrameNotification]) {
+        [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardStateDidChange:) name:name object:nil];
+    }
     _settingsSidebar.videoSettingsChanged = ^(ManualVideoSettings *settings, ManualVideoFields fields) {
         StreamFrameViewController *controller = weakSelf;
-        if (controller) [controller->_manualVideoController requestSettings:settings fields:fields];
+        if (!controller) return;
+        if (fields & ManualVideoBitrate) controller.streamConfig.bitRate = (int)settings.bitrate;
+        [controller->_manualVideoController requestSettings:settings fields:fields bitrateBudget:settings.bitrate];
     };
     _settingsSidebar.visibilityChanged = ^(BOOL visible) {
         StreamFrameViewController *controller = weakSelf;
@@ -356,7 +397,19 @@
     }
 #endif
     BOOL separate = !CGRectIsNull(fold);
-    _workspace.view.frame = self.view.bounds;
+    CGRect workspaceFrame = self.view.bounds;
+    UIInterfaceOrientation orientation = self.view.window.windowScene.interfaceOrientation;
+    BOOL portraitPhone = self.traitCollection.userInterfaceIdiom == UIUserInterfaceIdiomPhone &&
+        (UIInterfaceOrientationIsPortrait(orientation) ||
+         (orientation == UIInterfaceOrientationUnknown && workspaceFrame.size.height > workspaceFrame.size.width));
+    if (_streamView.keyboardVisible && !portraitPhone && !separate) {
+        CGFloat keyboardTop = CGRectGetMaxY(_keyboardViewportGuide.layoutFrame);
+        if (keyboardTop > CGRectGetMinY(workspaceFrame) &&
+            keyboardTop < CGRectGetMaxY(workspaceFrame) - self.view.safeAreaInsets.bottom - 1) {
+            workspaceFrame.size.height = keyboardTop - CGRectGetMinY(workspaceFrame);
+        }
+    }
+    _workspace.view.frame = workspaceFrame;
     [_workspace updateLayoutForFoldRegion:fold settingsVisible:_settingsSidebar.visible];
     CGRect videoFrame = _workspace.videoFrame;
     if (separate != _separateControls) {
@@ -364,11 +417,20 @@
         [_streamView setSeparateControlsView:separate ? _controlsSurface : nil];
     }
     [_settingsSidebar layoutInFrame:[self streamSidebarFrame]];
-    CGRect buttonArea = separate ? _workspace.operationsFrame : self.view.bounds;
+    CGRect buttonArea = separate ? _workspace.operationsFrame : workspaceFrame;
     if (_settingsSidebar.visible && !separate) {
         buttonArea.size.width = MAX(0, CGRectGetMinX([self streamSidebarFrame]));
     }
     buttonArea = CGRectIntersection(buttonArea, self.view.safeAreaLayoutGuide.layoutFrame);
+    CGRect keyboard = self.view.keyboardLayoutGuide.layoutFrame;
+    if (_streamView.keyboardVisible && keyboard.size.height > self.view.safeAreaInsets.bottom + 1 &&
+        CGRectIntersectsRect(buttonArea, keyboard)) {
+        buttonArea.size.height = MAX(0, CGRectGetMinY(keyboard) - CGRectGetMinY(buttonArea));
+        if (buttonArea.size.height < 76) {
+            buttonArea = self.view.safeAreaLayoutGuide.layoutFrame;
+            buttonArea.size.height = MAX(0, CGRectGetMinY(keyboard) - CGRectGetMinY(buttonArea));
+        }
+    }
     _settingsFloatButton.hidden = _settingsSidebar.visible && (separate || buttonArea.size.width < 76);
     if (!CGRectIsEmpty(buttonArea)) _settingsFloatButton.movementBounds = buttonArea;
     if (_settingsSidebar.view) [self.view bringSubviewToFront:_settingsSidebar.view];
@@ -390,11 +452,20 @@
 }
 
 - (void)toggleStreamSettings {
+    if (!_settingsSidebar.visible && _streamView.keyboardVisible) [_streamView hideKeyboard];
     [_streamView cancelControlTouches];
     [_settingsSidebar showForHost:self.streamConfig.settingsHost frame:[self streamSidebarFrame] streaming:YES];
     [self updateManualVideoUI];
     if (_settingsSidebar.visible) [_manualVideoController refresh];
     [self.view setNeedsLayout];
+}
+
+- (void)refreshKeyboardState { _settingsSidebar.keyboardVisible = StreamHasTextResponder(self.view); }
+- (void)keyboardStateDidChange:(NSNotification *)notification { [self refreshKeyboardState]; [self.view setNeedsLayout]; }
+- (void)toggleStreamKeyboard {
+    if (StreamHasTextResponder(self.view)) { [self.view endEditing:YES]; [_streamView hideKeyboard]; }
+    else [_streamView showKeyboard];
+    [self refreshKeyboardState];
 }
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
@@ -437,16 +508,17 @@
         if (stream == nil) return;
         ManualVideoSettings *settings = controller.response.settings;
         if (controller.response.validSession) {
-            [stream->_streamMan updateVideoFrameRate:(int)settings.frameRate bitrate:(int)settings.bitrate];
-            ManualVideoFields fields = controller.appliedFields;
+            [stream->_streamMan updateVideoFrameRate:(int)settings.frameRate bitrate:stream.streamConfig.bitRate];
+            ManualVideoFields fields = controller.appliedFields & ~ManualVideoBitrate;
             if (fields) [[[DataManager alloc] init] saveVideoWidth:fields & ManualVideoResolution ? @(settings.width) : nil
                 height:fields & ManualVideoResolution ? @(settings.height) : nil
                 framerate:fields & ManualVideoFrameRate ? @(settings.frameRate) : nil
-                bitrate:fields & ManualVideoBitrate ? @(settings.bitrate) : nil];
+                bitrate:nil];
         }
         [stream updateManualVideoUI];
     };
-    [_manualVideoController refresh];
+    [_manualVideoController refreshWithBitrateBudget:self.streamConfig.bitRate
+        audioChannels:CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(self.streamConfig.audioConfiguration)];
 }
 
 - (void)updateManualVideoUI {

@@ -22,6 +22,7 @@
 - (void) stopDiscovery;
 - (void) stopDiscoveryBlocking;
 - (void) resetDiscoveryState;
+- (void) refreshDiscovery;
 - (BOOL) addHostToDiscovery:(TemporaryHost*)host;
 - (void) removeHostFromDiscovery:(TemporaryHost*)host;
 - (void) pauseDiscoveryForHost:(TemporaryHost *)host;

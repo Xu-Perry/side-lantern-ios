@@ -30,10 +30,14 @@
     if (_parent == nil || !streaming) return;
     _container = [[StreamSettingsContainerViewController alloc] initWithStoryboard:_overlayParent.storyboard host:host];
     _container.onScreenControlsAvailable = self.onScreenControlsAvailable;
+    _container.keyboardVisible = self.keyboardVisible;
     __weak typeof(self) weakSelf = self;
     _container.settingsChanged = ^{ if (weakSelf.settingsChanged) weakSelf.settingsChanged(); };
     _container.dismissHandler = ^{ [weakSelf close]; };
     _container.exitStreamHandler = ^{ if (weakSelf.exitStreamHandler) weakSelf.exitStreamHandler(); };
+    _container.keyboardToggleHandler = ^{ if (weakSelf.keyboardToggleHandler) weakSelf.keyboardToggleHandler(); };
+    _container.keyboardShortcutHandler = ^(KeyboardShortcut *shortcut) { if (weakSelf.keyboardShortcutHandler) weakSelf.keyboardShortcutHandler(shortcut); };
+    _container.shortcutEditingHandler = ^{ if (weakSelf.shortcutEditingHandler) weakSelf.shortcutEditingHandler(); };
     _container.videoSettingsChanged = ^(ManualVideoSettings *settings, ManualVideoFields fields) {
         if (weakSelf.videoSettingsChanged) weakSelf.videoSettingsChanged(settings, fields);
     };
@@ -57,6 +61,7 @@
 
 - (void)close {
     if (_container == nil) return;
+    [_container.view endEditing:YES];
     [_container saveSettings];
     if (self.settingsChanged) self.settingsChanged();
     [_container willMoveToParentViewController:nil];
@@ -66,6 +71,11 @@
     _container = nil;
     if (self.visibilityChanged) self.visibilityChanged(NO);
     UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, nil);
+}
+
+- (void)setKeyboardVisible:(BOOL)keyboardVisible {
+    _keyboardVisible = keyboardVisible;
+    _container.keyboardVisible = keyboardVisible;
 }
 
 - (void)updateManualVideoSettings:(ManualVideoSettings *)settings available:(BOOL)available updating:(BOOL)updating message:(NSString *)message {

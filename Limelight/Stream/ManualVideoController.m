@@ -12,6 +12,9 @@
     NSUInteger _polls;
     BOOL _busy;
     BOOL _cancelled;
+    NSInteger _initialBitrateBudget;
+    NSInteger _audioChannels;
+    ManualVideoBitrateBudget *_bitrateBudget;
     NSString *_error;
     NSTimeInterval _deadline;
 }
@@ -41,6 +44,22 @@
     _deadline = NSDate.timeIntervalSinceReferenceDate + 15;
     [self notify];
     [self query:_generation];
+}
+- (void)refreshWithBitrateBudget:(NSInteger)bitrate audioChannels:(NSInteger)audioChannels {
+    if (_cancelled || _busy) return;
+    _initialBitrateBudget = bitrate;
+    _audioChannels = audioChannels;
+    _bitrateBudget = nil;
+    [self refresh];
+}
+- (void)requestSettings:(ManualVideoSettings *)settings fields:(ManualVideoFields)fields bitrateBudget:(NSInteger)bitrateBudget {
+    if (!self.available || fields == 0) return;
+    if (fields & ManualVideoBitrate) {
+        NSInteger bitrate = [_bitrateBudget encoderBitrateForBudget:bitrateBudget];
+        if (bitrate < 500 || bitrate > 250000) { [self fail:@"invalid_video_settings" unavailable:NO]; return; }
+        settings = [[ManualVideoSettings alloc] initWithWidth:settings.width height:settings.height frameRate:settings.frameRate bitrate:bitrate];
+    }
+    [self requestSettings:settings fields:fields];
 }
 - (void)requestSettings:(ManualVideoSettings *)settings fields:(ManualVideoFields)fields {
     if (!self.available || fields == 0) return;
@@ -86,6 +105,10 @@
     }
     _identifier = response.sessionIdentifier;
     _response = response;
+    if (!_bitrateBudget && _initialBitrateBudget > 0 && response.statusCode == 200) {
+        _bitrateBudget = [[ManualVideoBitrateBudget alloc] initWithBudget:_initialBitrateBudget
+            encoderBitrate:response.settings.bitrate audioChannels:_audioChannels];
+    }
     return YES;
 }
 - (void)query:(NSUInteger)generation {

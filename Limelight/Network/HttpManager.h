@@ -12,7 +12,7 @@
 #import "TemporaryHost.h"
 @class ManualVideoSettings;
 
-@interface HttpManager : NSObject <NSURLSessionDelegate>
+@interface HttpManager : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate>
 
 - (id) initWithHost:(TemporaryHost*) host;
 - (id) initWithAddress:(NSString*) hostAddressPortString httpsPort:(unsigned short) httpsPort serverCert:(NSData*) serverCert;
@@ -33,6 +33,8 @@
 - (NSURLRequest*) newQuitAppRequest;
 - (NSURLRequest*) newAppAssetRequestWithAppId:(NSString*)appId;
 - (void) executeRequestSynchronously:(HttpRequest*)request;
+- (NSURL *)fileTransferBaseURL;
+- (NSURLSession *)newFileTransferSession;
 
 @end
 

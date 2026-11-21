@@ -1,6 +1,9 @@
 #import "SceneDelegate.h"
 #import "AppDelegate.h"
 #import "StreamFrameViewController.h"
+#import "FileTransferPreview.h"
+#import "DeviceBrowserViewController.h"
+#import "SideLanternNavigationController.h"
 
 @implementation SceneDelegate
 
@@ -20,13 +23,22 @@
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle:nil];
     self.window.rootViewController = [storyboard instantiateInitialViewController];
 #if DEBUG && TARGET_OS_SIMULATOR
+    if ([NSProcessInfo.processInfo.arguments containsObject:@"--sidelantern-device-list-preview"] ||
+        [NSProcessInfo.processInfo.arguments containsObject:@"--sidelantern-device-detail-preview"]) {
+        self.window.rootViewController = DeviceBrowserPreview([NSProcessInfo.processInfo.arguments containsObject:@"--sidelantern-device-detail-preview"],
+            [NSProcessInfo.processInfo.arguments containsObject:@"--sidelantern-device-empty-preview"]);
+    }
+    if ([NSProcessInfo.processInfo.arguments containsObject:@"--sidelantern-file-transfer-preview"] ||
+        [NSProcessInfo.processInfo.arguments containsObject:@"--sidelantern-file-browser-preview"]) {
+        self.window.rootViewController = FileTransferPreview([NSProcessInfo.processInfo.arguments containsObject:@"--sidelantern-file-browser-preview"]);
+    }
     if ([NSProcessInfo.processInfo.arguments containsObject:@"--sidelantern-stream-preview"]) {
         StreamFrameViewController *stream = [storyboard instantiateViewControllerWithIdentifier:@"streamFrame"];
         StreamConfiguration *config = [[StreamConfiguration alloc] init];
         config.width = 1920; config.height = 1080; config.frameRate = 60;
         config.appName = @"SideLantern";
         stream.streamConfig = config;
-        self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:stream];
+        self.window.rootViewController = [[SideLanternNavigationController alloc] initWithRootViewController:stream];
     }
 #endif
     [self.window makeKeyAndVisible];

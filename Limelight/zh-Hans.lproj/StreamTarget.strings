@@ -67,7 +67,8 @@
 "stream.controls" = "虚拟操作区";
 "stream.preview" = "串流布局预览";
 "sidebar.stream" = "串流设置";
-"sidebar.keyboard" = "键盘设置";
+"sidebar.keyboard" = "键盘";
+"sidebar.shortcuts" = "快捷键";
 "sidebar.desktop" = "显示桌面";
 "sidebar.pending" = "待实现";
 "sidebar.exit_stream" = "退出串流";

@@ -15,6 +15,9 @@ typedef void (^ManualVideoSchedule)(NSTimeInterval delay, void (^operation)(void
 @property (nonatomic, copy) void (^stateChanged)(ManualVideoController *controller);
 - (instancetype)initWithTransport:(ManualVideoTransport)transport schedule:(ManualVideoSchedule)schedule;
 - (void)refresh;
+// Discover the session without changing Moonlight's configured bandwidth budget.
+- (void)refreshWithBitrateBudget:(NSInteger)bitrate audioChannels:(NSInteger)audioChannels;
 - (void)requestSettings:(ManualVideoSettings *)settings fields:(ManualVideoFields)fields;
+- (void)requestSettings:(ManualVideoSettings *)settings fields:(ManualVideoFields)fields bitrateBudget:(NSInteger)bitrateBudget;
 - (void)cancel;
 @end

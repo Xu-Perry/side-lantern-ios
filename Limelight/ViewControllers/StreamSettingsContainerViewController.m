@@ -1,5 +1,6 @@
 #import "StreamSettingsContainerViewController.h"
 #import "SettingsViewController.h"
+#import "KeyboardShortcutsViewController.h"
 
 static NSString *SidebarText(NSString *key) {
     return NSLocalizedStringFromTable(key, @"StreamTarget", nil);
@@ -100,11 +101,14 @@ static void PinSidebarView(UIView *view, UIView *parent) {
 
 @interface StreamSettingsMenuViewController : UIViewController
 @property (nonatomic) NSInteger selectedIndex;
+@property (nonatomic) BOOL keyboardVisible;
 @property (nonatomic, copy) void (^selectionChanged)(NSInteger index);
 @end
 
 @implementation StreamSettingsMenuViewController {
     NSArray<UIButton *> *_buttons;
+    UIScrollView *_scroll;
+    CGSize _lastViewportSize;
     NSLayoutConstraint *_top;
     NSLayoutConstraint *_bottom;
 }
@@ -113,9 +117,9 @@ static void PinSidebarView(UIView *view, UIView *parent) {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor colorWithWhite:0.07 alpha:1];
     self.view.accessibilityIdentifier = @"sidebar-function-menu";
-    NSArray *titles = @[SidebarText(@"sidebar.stream"), SidebarText(@"sidebar.keyboard"), SidebarText(@"sidebar.desktop")];
-    NSArray *symbols = @[@"play.rectangle", @"keyboard", @"macwindow"];
-    NSArray *identifiers = @[@"sidebar-tab-stream", @"sidebar-tab-keyboard", @"sidebar-tab-desktop"];
+    NSArray *titles = @[SidebarText(@"sidebar.stream"), SidebarText(@"sidebar.keyboard"), SidebarText(@"sidebar.shortcuts"), SidebarText(@"sidebar.desktop")];
+    NSArray *symbols = @[@"play.rectangle", @"keyboard", @"command", @"macwindow"];
+    NSArray *identifiers = @[@"sidebar-tab-stream", @"sidebar-tab-keyboard", @"sidebar-tab-shortcuts", @"sidebar-tab-desktop"];
     NSMutableArray *buttons = [[NSMutableArray alloc] init];
     for (NSInteger index = 0; index < titles.count; index++) {
         UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -159,15 +163,17 @@ static void PinSidebarView(UIView *view, UIView *parent) {
     menu.spacing = 8;
     menu.translatesAutoresizingMaskIntoConstraints = NO;
     UIScrollView *scroll = [[UIScrollView alloc] init];
+    _scroll = scroll;
     scroll.translatesAutoresizingMaskIntoConstraints = NO;
     scroll.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
     scroll.showsVerticalScrollIndicator = NO;
     [self.view addSubview:scroll];
     [scroll addSubview:menu];
     _top = [scroll.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:8];
-    _bottom = [scroll.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor constant:-8];
+    _bottom = [scroll.bottomAnchor constraintEqualToAnchor:self.view.keyboardLayoutGuide.topAnchor constant:-8];
+    _bottom.priority = UILayoutPriorityDefaultHigh;
     [NSLayoutConstraint activateConstraints:@[
-        _top, _bottom,
+        _top, _bottom, [scroll.heightAnchor constraintGreaterThanOrEqualToConstant:0],
         [scroll.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
         [scroll.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
         [menu.topAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.topAnchor],
@@ -181,8 +187,20 @@ static void PinSidebarView(UIView *view, UIView *parent) {
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
     BOOL landscape = UIInterfaceOrientationIsLandscape(self.view.window.windowScene.interfaceOrientation);
-    _top.constant = 8 + MAX(self.view.safeAreaInsets.top, landscape ? 24 : 0);
-    _bottom.constant = -(8 + (landscape ? 0 : self.view.safeAreaInsets.bottom));
+    CGFloat availableHeight = CGRectGetMinY(self.view.keyboardLayoutGuide.layoutFrame);
+    BOOL crampedPortrait = !landscape && self.keyboardVisible && availableHeight > 0 && availableHeight < 160;
+    _top.constant = crampedPortrait ? 4 : 8 + MAX(self.view.safeAreaInsets.top, landscape ? 24 : 0);
+    // The keyboard guide already incorporates the bottom safe area.
+    _bottom.constant = crampedPortrait ? -4 : -8;
+    CGSize size = _scroll.bounds.size;
+    if (self.keyboardVisible && size.height > 0 && size.height < 144 && !CGSizeEqualToSize(size, _lastViewportSize)) {
+        UIButton *keyboard = _buttons[1];
+        CGRect frame = [keyboard convertRect:keyboard.bounds toView:_scroll];
+        CGFloat offset = MAX(0, CGRectGetMidY(frame) - size.height / 2);
+        offset = MIN(offset, MAX(0, _scroll.contentSize.height - size.height));
+        [_scroll setContentOffset:CGPointMake(0, offset) animated:NO];
+    }
+    _lastViewportSize = size;
 }
 
 - (void)setSelectedIndex:(NSInteger)selectedIndex {
@@ -192,10 +210,16 @@ static void PinSidebarView(UIView *view, UIView *parent) {
 
 - (void)updateSelection {
     for (UIButton *button in _buttons) {
-        BOOL selected = button.tag == self.selectedIndex;
+        BOOL selected = button.tag == 1 ? self.keyboardVisible : button.tag == self.selectedIndex;
         button.backgroundColor = selected ? [UIColor colorWithRed:0.45 green:0.36 blue:0.78 alpha:1] : UIColor.clearColor;
         button.accessibilityTraits = UIAccessibilityTraitButton | (selected ? UIAccessibilityTraitSelected : 0);
     }
+}
+
+- (void)setKeyboardVisible:(BOOL)keyboardVisible {
+    if (_keyboardVisible != keyboardVisible) _lastViewportSize = CGSizeZero;
+    _keyboardVisible = keyboardVisible; [self updateSelection];
+    [self.viewIfLoaded setNeedsLayout];
 }
 
 - (void)selectTab:(UIButton *)sender {
@@ -231,10 +255,12 @@ static void PinSidebarView(UIView *view, UIView *parent) {
     TemporaryHost *_host;
     UIView *_panel;
     UIView *_contentHost;
+    NSLayoutConstraint *_contentTopAfterActions;
+    NSLayoutConstraint *_contentTopWithoutActions;
     CGRect _sidebarFrame;
     StreamSettingsActionsViewController *_actions;
     StreamSettingsMenuViewController *_menu;
-    NSArray<UIViewController *> *_pages;
+    NSDictionary<NSNumber *, UIViewController *> *_pages;
     UIViewController *_contentController;
     StreamSettingsDismissMask *_dismissMask;
 }
@@ -285,6 +311,7 @@ static void PinSidebarView(UIView *view, UIView *parent) {
     _actions.sectionTitle = SidebarText(@"settings.title");
     _actions.exitHandler = ^{ if (weakSelf.exitStreamHandler) weakSelf.exitStreamHandler(); };
     _menu = [[StreamSettingsMenuViewController alloc] init];
+    _menu.keyboardVisible = self.keyboardVisible;
     _menu.selectionChanged = ^(NSInteger index) { [weakSelf selectSection:index]; };
     [self addChildViewController:_actions];
     [_panel addSubview:_actions.view];
@@ -294,6 +321,8 @@ static void PinSidebarView(UIView *view, UIView *parent) {
     [_panel addSubview:_menu.view];
     _menu.view.translatesAutoresizingMaskIntoConstraints = NO;
     [_menu didMoveToParentViewController:self];
+    _contentTopAfterActions = [_contentHost.topAnchor constraintEqualToAnchor:_actions.view.bottomAnchor];
+    _contentTopWithoutActions = [_contentHost.topAnchor constraintEqualToAnchor:_panel.topAnchor];
     [NSLayoutConstraint activateConstraints:@[
         [_menu.view.topAnchor constraintEqualToAnchor:_panel.topAnchor],
         [_menu.view.bottomAnchor constraintEqualToAnchor:_panel.bottomAnchor],
@@ -302,7 +331,7 @@ static void PinSidebarView(UIView *view, UIView *parent) {
         [_actions.view.topAnchor constraintEqualToAnchor:_panel.topAnchor],
         [_actions.view.leadingAnchor constraintEqualToAnchor:_panel.leadingAnchor],
         [_actions.view.trailingAnchor constraintEqualToAnchor:_menu.view.leadingAnchor],
-        [_contentHost.topAnchor constraintEqualToAnchor:_actions.view.bottomAnchor],
+        _contentTopAfterActions,
         [_contentHost.leadingAnchor constraintEqualToAnchor:_panel.leadingAnchor],
         [_contentHost.trailingAnchor constraintEqualToAnchor:_menu.view.leadingAnchor],
         [_contentHost.bottomAnchor constraintEqualToAnchor:_panel.bottomAnchor]]];
@@ -315,17 +344,23 @@ static void PinSidebarView(UIView *view, UIView *parent) {
     _settings.videoSettingsChanged = ^(ManualVideoSettings *settings, ManualVideoFields fields) {
         if (weakSelf.videoSettingsChanged) weakSelf.videoSettingsChanged(settings, fields);
     };
-    StreamSettingsPlaceholderViewController *keyboard = [[StreamSettingsPlaceholderViewController alloc] init];
-    keyboard.title = SidebarText(@"sidebar.keyboard");
+    KeyboardShortcutsViewController *shortcuts = [[KeyboardShortcutsViewController alloc] init];
+    shortcuts.title = SidebarText(@"sidebar.shortcuts");
+    shortcuts.shortcutHandler = ^(KeyboardShortcut *shortcut) { if (weakSelf.keyboardShortcutHandler) weakSelf.keyboardShortcutHandler(shortcut); };
+    shortcuts.editingHandler = ^{ if (weakSelf.shortcutEditingHandler) weakSelf.shortcutEditingHandler(); };
     StreamSettingsPlaceholderViewController *desktop = [[StreamSettingsPlaceholderViewController alloc] init];
     desktop.title = SidebarText(@"sidebar.desktop");
-    _pages = @[_settings, keyboard, desktop];
+    _pages = @{@0:_settings, @2:shortcuts, @3:desktop};
     [self selectSection:0];
 }
 
 - (void)selectSection:(NSInteger)index {
-    if (index < 0 || index >= _pages.count) return;
-    UIViewController *page = _pages[index];
+    if (index == 1) { if (self.keyboardToggleHandler) self.keyboardToggleHandler(); return; }
+    if (index == 2 && self.keyboardVisible && CGRectGetMinY(self.view.keyboardLayoutGuide.layoutFrame) - _sidebarFrame.origin.y < 160) {
+        if (self.keyboardToggleHandler) self.keyboardToggleHandler();
+    }
+    UIViewController *page = _pages[@(index)];
+    if (page == nil) return;
     if (page == _contentController) return;
     if (_contentController == _settings) {
         [self saveSettings];
@@ -337,13 +372,18 @@ static void PinSidebarView(UIView *view, UIView *parent) {
     [self addChildViewController:page];
     [_contentHost addSubview:page.view];
     page.view.clipsToBounds = YES;
-    page.view.accessibilityIdentifier = index == 0 ? @"sidebar-stream-settings" : @"sidebar-placeholder";
+    page.view.accessibilityIdentifier = index == 0 ? @"sidebar-stream-settings" : index == 2 ? @"sidebar-shortcuts" : @"sidebar-placeholder";
     PinSidebarView(page.view, _contentHost);
     [page didMoveToParentViewController:self];
     _contentController = page;
     _menu.selectedIndex = index;
     _actions.sectionTitle = index == 0 ? SidebarText(@"settings.title") : page.title;
     UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, page.view);
+}
+
+- (void)setKeyboardVisible:(BOOL)keyboardVisible {
+    _keyboardVisible = keyboardVisible; _menu.keyboardVisible = keyboardVisible;
+    [self.viewIfLoaded setNeedsLayout];
 }
 
 - (void)layoutSidebarInFrame:(CGRect)frame {
@@ -363,7 +403,21 @@ static void PinSidebarView(UIView *view, UIView *parent) {
 
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
-    _panel.frame = _sidebarFrame;
+    CGRect frame = _sidebarFrame;
+    CGRect keyboard = self.view.keyboardLayoutGuide.layoutFrame;
+    if (keyboard.size.height > self.view.safeAreaInsets.bottom + 1 && CGRectIntersectsRect(frame, keyboard)) {
+        frame.size.height = MAX(0, MIN(CGRectGetMaxY(frame), CGRectGetMinY(keyboard)) - frame.origin.y);
+    }
+    // Keep the video geometry intact; only the settings panel avoids the keyboard.
+    // The right menu has its own keyboard guide and can still scroll/toggle
+    // the keyboard when the fold's operation region has almost no free space.
+    _panel.frame = frame.size.height < 160 ? _sidebarFrame : frame;
+    BOOL compactShortcuts = [_contentController isKindOfClass:KeyboardShortcutsViewController.class] && self.keyboardVisible && frame.size.height < 160;
+    if (_actions.view.hidden != compactShortcuts) {
+        _actions.view.hidden = compactShortcuts;
+        [NSLayoutConstraint deactivateConstraints:@[_contentTopAfterActions, _contentTopWithoutActions]];
+        [NSLayoutConstraint activateConstraints:compactShortcuts ? @[_contentTopWithoutActions] : @[_contentTopAfterActions]];
+    }
     _settings.usesFullBounds = UIInterfaceOrientationIsLandscape(self.view.window.windowScene.interfaceOrientation);
 }
 

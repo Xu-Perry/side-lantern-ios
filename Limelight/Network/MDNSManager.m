@@ -17,7 +17,7 @@
     NSNetServiceBrowser* mDNSBrowser;
     NSMutableArray* services;
     BOOL scanActive;
-    BOOL timerPending;
+    NSTimer *_searchTimer;
 }
 
 static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
@@ -38,6 +38,10 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void) searchForHosts {
+    if (!NSThread.isMainThread) {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self searchForHosts]; });
+        return;
+    }
     if (scanActive) {
         return;
     }
@@ -45,27 +49,35 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
     Log(LOG_I, @"Starting mDNS discovery");
     scanActive = TRUE;
 
-    if (!timerPending) {
-        timerPending = TRUE;
-
-        // Just invoke the timer callback to save a little code
-        [self startSearchTimerCallback:nil];
-    }
+    [self startSearchTimerCallback:nil];
+    __weak typeof(self) weakSelf = self;
+    _searchTimer = [NSTimer timerWithTimeInterval:5.0 repeats:YES block:^(NSTimer *timer) { [weakSelf startSearchTimerCallback:timer]; }];
+    [NSRunLoop.mainRunLoop addTimer:_searchTimer forMode:NSRunLoopCommonModes];
 }
 
 - (void) stopSearching {
-    if (!scanActive) {
+    if (!NSThread.isMainThread) {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self stopSearching]; });
         return;
     }
     
     Log(LOG_I, @"Stopping mDNS discovery");
     scanActive = FALSE;
+    [_searchTimer invalidate];
+    _searchTimer = nil;
     [mDNSBrowser stop];
 }
 
 - (void) forgetHosts {
+    if (!NSThread.isMainThread) {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self forgetHosts]; });
+        return;
+    }
+    for (NSNetService *service in services) [service stop];
     [services removeAllObjects];
 }
+
+- (void)dealloc { [_searchTimer invalidate]; }
 
 + (NSString*)sockAddrToString:(NSData*)addrData {
     char addrStr[INET6_ADDRSTRLEN];
@@ -173,6 +185,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void)netServiceDidResolveAddress:(NSNetService *)service {
+    if (!scanActive || ![services containsObject:service]) return;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NSArray<NSData*>* addresses = [service addresses];
         
@@ -245,13 +258,14 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didFindService:(NSNetService *)aNetService moreComing:(BOOL)moreComing {
+    if (!scanActive) return;
     Log(LOG_D, @"Found service: %@", aNetService);
     
     if (![services containsObject:aNetService]) {
         Log(LOG_I, @"Found new host: %@", aNetService.name);
         [aNetService setDelegate:self];
-        [aNetService resolveWithTimeout:5];
         [services addObject:aNetService];
+        [aNetService resolveWithTimeout:5];
     }
 }
 
@@ -269,7 +283,6 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 - (void)startSearchTimerCallback:(NSTimer *)timer {
     // Check if we've been stopped since this was queued
     if (!scanActive) {
-        timerPending = FALSE;
         return;
     }
     
@@ -277,15 +290,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
     [mDNSBrowser stop];
     [mDNSBrowser searchForServicesOfType:NV_SERVICE_TYPE inDomain:@""];
     
-    // Search again in 5 seconds. We need to do this because
-    // we want more aggressive querying than Bonjour will normally
-    // do for when we're at the hosts screen. This also covers scenarios
-    // where discovery didn't work, like if WiFi was disabled.
-    [NSTimer scheduledTimerWithTimeInterval:5.0
-                                     target:self
-                                   selector:@selector(startSearchTimerCallback:)
-                                   userInfo:nil
-                                    repeats:NO];
+    // The repeating timer runs in common modes so scrolling cannot pause discovery.
 }
 
 - (void)retryResolveTimerCallback:(NSTimer *)timer {
@@ -295,6 +300,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
     }
     
     NSNetService* service = timer.userInfo;
+    if (![services containsObject:service]) return;
     Log(LOG_I, @"Retrying mDNS resolution for %@", service);
     
     if (service.hostName == nil) {

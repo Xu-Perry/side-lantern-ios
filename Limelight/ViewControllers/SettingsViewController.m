@@ -137,7 +137,17 @@ BOOL isCustomResolution(CGSize res) {
     [super viewDidLoad];
 
     self.title = NSLocalizedStringFromTable(@"settings.title", @"StreamTarget", nil);
-    if (!self.streaming) self.edgesForExtendedLayout = UIRectEdgeNone;
+    // Extend the page background behind the translucent system bar during
+    // push/pop. Content already accounts for the safe area in its constraints.
+    if (!self.streaming) self.edgesForExtendedLayout = UIRectEdgeAll;
+    if (!self.streaming) {
+        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+        [appearance configureWithDefaultBackground];
+        self.navigationItem.standardAppearance = appearance;
+        self.navigationItem.scrollEdgeAppearance = appearance;
+        self.navigationItem.compactAppearance = appearance;
+        self.navigationItem.compactScrollEdgeAppearance = appearance;
+    }
 
     // Always run settings in dark mode because we want the light fonts
     if (@available(iOS 13.0, tvOS 13.0, *)) {
@@ -164,8 +174,8 @@ BOOL isCustomResolution(CGSize res) {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(streamTargetTextSizeChanged:)
         name:UIContentSizeCategoryDidChangeNotification object:nil];
     
-    // Ensure we pick a bitrate that falls exactly onto a slider notch
-    _bitrate = bitrateTable[[self getSliderValueForBitrate:[currentSettings.bitrate intValue]]];
+    // Keep the exact saved Moonlight bitrate, including transport overhead.
+    _bitrate = currentSettings.bitrate.integerValue;
 
     // Get the size of the screen with and without safe area insets
     UIWindow *window = self.view.window ?: self.parentViewController.view.window ?:
@@ -279,7 +289,7 @@ BOOL isCustomResolution(CGSize res) {
     [self.bitrateSlider setValue:[self getSliderValueForBitrate:_bitrate] animated:YES];
     [self.bitrateSlider addTarget:self action:@selector(bitrateSliderMoved) forControlEvents:UIControlEventValueChanged];
     [self.bitrateSlider addTarget:self action:@selector(settingValueChanged:) forControlEvents:UIControlEventValueChanged];
-    [self.bitrateSlider addTarget:self action:@selector(settingValueChanged:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
+    [self.bitrateSlider addTarget:self action:@selector(bitrateSliderFinished:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
     [self updateBitrateText];
     [self updateResolutionDisplayViewText];
     [self buildSettingsLayout];
@@ -500,10 +510,24 @@ BOOL isCustomResolution(CGSize res) {
 
 - (void)settingValueChanged:(UIControl *)sender {
     if (_editingCustomResolution || (sender == self.bitrateSlider && self.bitrateSlider.tracking)) return;
+    [self commitSettingChange:sender];
+}
+
+- (void)bitrateSliderFinished:(UISlider *)sender {
+    if (_editingCustomResolution) return;
+    [self bitrateSliderMoved];
+    // A release event is final even if UIKit still reports tracking during its callbacks.
+    [self commitSettingChange:sender];
+}
+
+- (void)commitSettingChange:(UIControl *)sender {
     UIControl *source = [sender isKindOfClass:SettingsChoiceView.class] ? ((SettingsChoiceView *)sender).control : sender;
     ManualVideoFields fields = source == self.resolutionSelector ? ManualVideoResolution :
         source == self.framerateSelector ? ManualVideoFrameRate : source == self.bitrateSlider ? ManualVideoBitrate : 0;
     [self saveSettings];
+    if (self.streaming && (fields & ManualVideoBitrate)) {
+        [[[DataManager alloc] init] saveVideoWidth:nil height:nil framerate:nil bitrate:@(_bitrate)];
+    }
     if (self.changeHandler) self.changeHandler();
     if (self.streaming && fields) {
         ManualVideoSettings *settings = [self chosenVideoSettings];
@@ -542,7 +566,8 @@ BOOL isCustomResolution(CGSize res) {
         [self.framerateSelector insertSegmentWithTitle:[NSString stringWithFormat:@"%ld FPS", (long)settings.frameRate] atIndex:frameIndex animated:NO];
     }
     self.framerateSelector.selectedSegmentIndex = frameIndex;
-    _bitrate = settings.bitrate;
+    // The server reports encoder-only bitrate. Keep displaying the user's
+    // configured bandwidth budget so reopening settings does not change it.
     [self.bitrateSlider setValue:[self getSliderValueForBitrate:_bitrate] animated:NO];
     [self updateBitrateText];
     [self updateResolutionDisplayViewText];
@@ -586,7 +611,6 @@ BOOL isCustomResolution(CGSize res) {
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    if (!self.streaming) [self.navigationController setNavigationBarHidden:NO animated:animated];
     [self configureStreamTargetsForHost:_targetHost];
 }
 

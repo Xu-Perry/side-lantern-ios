@@ -363,7 +363,7 @@
         <!--Navigation Controller-->
         <scene sceneID="FxL-or-HET">
             <objects>
-                <navigationController id="baW-rW-rBd" sceneMemberID="viewController">
+                <navigationController id="baW-rW-rBd" customClass="SideLanternNavigationController" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" barStyle="black" translucent="NO" id="RUe-14-4Ya">
                         <rect key="frame" x="0.0" y="24" width="834" height="50"/>
                         <autoresizingMask key="autoresizingMask"/>

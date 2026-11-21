@@ -25,6 +25,59 @@
 }
 @end
 
+static NSInteger EncoderBitrateForBudget(NSInteger budget, NSInteger fec, NSInteger audioOverhead) {
+    NSInteger video = budget / (100.f / (100 - fec));
+    video -= MIN(audioOverhead, video / 5);
+    video -= MIN(500, video / 10);
+    return video;
+}
+
+@implementation ManualVideoBitrateBudget {
+    NSInteger _initialBudget;
+    NSInteger _initialEncoderBitrate;
+    NSInteger _fec;
+    NSInteger _audioOverhead;
+    double _fraction;
+}
+- (instancetype)initWithBudget:(NSInteger)budget encoderBitrate:(NSInteger)encoderBitrate audioChannels:(NSInteger)audioChannels {
+    if (budget <= 0 || encoderBitrate <= 0) return nil;
+    if ((self = [super init])) {
+        _initialBudget = budget;
+        _initialEncoderBitrate = encoderBitrate;
+        _fec = -1;
+        NSInteger channels = MAX(1, MIN(8, audioChannels));
+        // Sunshine adjusts configured bitrate for its FEC percentage, negotiated
+        // audio quality and packet overhead. Learn these from the startup pair
+        // instead of assuming that every host uses 20% FEC or high-quality audio.
+        for (NSInteger fec = 0; fec <= 80; fec++) {
+            for (NSNumber *rate in @[@96, @256]) {
+                NSInteger audio = channels * rate.integerValue;
+                if (EncoderBitrateForBudget(budget, fec, audio) == encoderBitrate) {
+                    _fec = MAX(_fec, fec);
+                    _audioOverhead = MAX(_audioOverhead, audio);
+                }
+            }
+        }
+        if (_fec < 0) {
+            // A host limit can hide the original FEC adjustment. Use a
+            // conservative allowance based on the negotiated encoder value.
+            _fraction = MIN(1, (double)encoderBitrate / budget);
+            _audioOverhead = channels * 256;
+        }
+    }
+    return self;
+}
+- (NSInteger)encoderBitrateForBudget:(NSInteger)budget {
+    if (budget < 500 || budget > 250000) return 0;
+    if (budget == _initialBudget) return _initialEncoderBitrate;
+    if (_fec >= 0) return EncoderBitrateForBudget(budget, _fec, _audioOverhead);
+    NSInteger video = budget * _fraction;
+    video -= MIN(_audioOverhead, video / 5);
+    video -= MIN(500, video / 10);
+    return video;
+}
+@end
+
 static NSNumber *ManualVideoInteger(NSString *text) {
     NSCharacterSet *digits = [NSCharacterSet characterSetWithCharactersInString:@"0123456789"];
     if (text.length == 0 || text.length > 10 || [text rangeOfCharacterFromSet:digits.invertedSet].location != NSNotFound) return nil;

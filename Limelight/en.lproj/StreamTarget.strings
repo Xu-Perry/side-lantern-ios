@@ -68,6 +68,7 @@
 "stream.preview" = "Streaming layout preview";
 "sidebar.stream" = "Stream";
 "sidebar.keyboard" = "Keyboard";
+"sidebar.shortcuts" = "Shortcuts";
 "sidebar.desktop" = "Desktop";
 "sidebar.pending" = "Coming soon";
 "sidebar.exit_stream" = "Exit Stream";

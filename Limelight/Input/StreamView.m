@@ -14,6 +14,9 @@
 #import "RelativeTouchHandler.h"
 #import "AbsoluteTouchHandler.h"
 #import "KeyboardInputField.h"
+#if !TARGET_OS_TV
+#import "KeyboardShortcutBar.h"
+#endif
 
 static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 
@@ -76,6 +79,7 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 #if !TARGET_OS_TV
     __weak UIView *_separateControlsView;
     ControllerSupport *_controlsSupport;
+    KeyboardShortcutBar *_keyboardToolbar;
 #endif
 }
 
@@ -93,6 +97,13 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     [keyInputField setAutocorrectionType:UITextAutocorrectionTypeNo];
     [keyInputField setAutocapitalizationType:UITextAutocapitalizationTypeNone];
     [keyInputField setSpellCheckingType:UITextSpellCheckingTypeNo];
+    keyInputField.delegate = self;
+    [keyInputField addTarget:self action:@selector(onKeyboardPressed:) forControlEvents:UIControlEventEditingChanged];
+#if !TARGET_OS_TV
+    keyInputField.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    keyInputField.inputAssistantItem.leadingBarButtonGroups = @[];
+    keyInputField.inputAssistantItem.trailingBarButtonGroups = @[];
+#endif
     [self addSubview:keyInputField];
     
 #if TARGET_OS_TV
@@ -441,100 +452,69 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         [touchHandler touchesBegan:touches withEvent:event];
         
         if ([[event allTouches] count] == 3) {
-            if (isInputingText) {
-                Log(LOG_D, @"Closing the keyboard");
-                [keyInputField resignFirstResponder];
-                isInputingText = false;
-            } else {
-                Log(LOG_D, @"Opening the keyboard");
-                // Prepare the textbox used to capture keyboard events.
-                keyInputField.delegate = self;
-                keyInputField.text = @"0";
 #if !TARGET_OS_TV
-                // Prepare the toolbar above the keyboard for more options
-                UIToolbar *customToolbarView = [[UIToolbar alloc] initWithFrame:CGRectMake(0, 0, self.bounds.size.width, 44)];
-                
-                UIBarButtonItem *doneBarButton = [self createButtonWithImageNamed:@"DoneIcon.png" backgroundColor:[UIColor clearColor] target:self action:@selector(toolbarButtonClicked:) keyCode:0x00 isToggleable:NO];
-                UIBarButtonItem *windowsBarButton = [self createButtonWithImageNamed:@"WindowsIcon.png" backgroundColor:[UIColor blackColor] target:self action:@selector(toolbarButtonClicked:) keyCode:0x5B isToggleable:YES];
-                UIBarButtonItem *tabBarButton = [self createButtonWithImageNamed:@"TabIcon.png" backgroundColor:[UIColor blackColor] target:self action:@selector(toolbarButtonClicked:) keyCode:0x09 isToggleable:NO];
-                UIBarButtonItem *shiftBarButton = [self createButtonWithImageNamed:@"ShiftIcon.png" backgroundColor:[UIColor blackColor] target:self action:@selector(toolbarButtonClicked:) keyCode:0xA0 isToggleable:YES];
-                UIBarButtonItem *escapeBarButton = [self createButtonWithImageNamed:@"EscapeIcon.png" backgroundColor:[UIColor blackColor] target:self action:@selector(toolbarButtonClicked:) keyCode:0x1B isToggleable:NO];
-                UIBarButtonItem *controlBarButton = [self createButtonWithImageNamed:@"ControlIcon.png" backgroundColor:[UIColor blackColor] target:self action:@selector(toolbarButtonClicked:) keyCode:0xA2 isToggleable:YES];
-                UIBarButtonItem *altBarButton = [self createButtonWithImageNamed:@"AltIcon.png" backgroundColor:[UIColor blackColor] target:self action:@selector(toolbarButtonClicked:) keyCode:0xA4 isToggleable:YES];
-                UIBarButtonItem *deleteBarButton = [self createButtonWithImageNamed:@"DeleteIcon.png" backgroundColor:[UIColor blackColor] target:self action:@selector(toolbarButtonClicked:) keyCode:0x2E isToggleable:NO];
-                UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-                
-                [customToolbarView setItems:[NSArray arrayWithObjects:doneBarButton, windowsBarButton, escapeBarButton, tabBarButton, shiftBarButton, controlBarButton, altBarButton, deleteBarButton, flexibleSpace, nil]];
-                keyInputField.inputAccessoryView = customToolbarView;
-#endif
-                [keyInputField becomeFirstResponder];
-                [keyInputField addTarget:self action:@selector(onKeyboardPressed:) forControlEvents:UIControlEventEditingChanged];
-                
-                // Undo causes issues for our state management, so turn it off
-                [keyInputField.undoManager disableUndoRegistration];
-                
-                isInputingText = true;
-            }
-        }
-    }
-}
-
-- (UIBarButtonItem *)createButtonWithImageNamed:(NSString *)imageName backgroundColor:(UIColor *)backgroundColor target:(id)target action:(SEL)action keyCode:(NSInteger)keyCode isToggleable:(BOOL)isToggleable {
-    UIImage *image = [UIImage imageNamed:imageName];
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-    [button setImage:image forState:UIControlStateNormal];
-    button.frame = CGRectMake(0, 0, 30, 30);
-    button.imageView.contentMode = UIViewContentModeScaleAspectFit;
-    button.imageView.backgroundColor = backgroundColor;
-    button.imageView.layer.cornerRadius = 10.0;
-    button.imageEdgeInsets = UIEdgeInsetsMake(6, 6, 6, 6);
-    [button addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
-    objc_setAssociatedObject(button, "keyCode", @(keyCode), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    objc_setAssociatedObject(button, "isToggleable", @(isToggleable), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    objc_setAssociatedObject(button, "isOn", @(NO), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    UIBarButtonItem *barButton = [[UIBarButtonItem alloc] initWithCustomView:button];
-    return barButton;
-}
-
-- (void)toolbarButtonClicked:(UIButton *)sender {
-    BOOL isToggleable = [objc_getAssociatedObject(sender, "isToggleable") boolValue];
-    BOOL isOn = [objc_getAssociatedObject(sender, "isOn") boolValue];
-    if (isToggleable){
-        isOn = !isOn;
-        // Update the button's appearance based on its new state
-        if (isOn) {
-            sender.imageView.backgroundColor = [UIColor lightGrayColor];
-        } else {
-            sender.imageView.backgroundColor = [UIColor blackColor];
-        }
-    }
-    // Update the new on/off state of the button
-    objc_setAssociatedObject(sender, "isOn", @(isOn), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    // Get the keyCode parameter and convert to short for key press event
-    short keyCode = [objc_getAssociatedObject(sender, "keyCode") shortValue];
-    // Close keyboard if done button clicked
-    if (!keyCode) {
-        [keyInputField resignFirstResponder];
-        isInputingText = false;
-    }
-    else {
-        // Send key press event using keyCode parameter, toggle if necessary
-        if (isToggleable){
-            if (isOn){
-                LiSendKeyboardEvent(keyCode, KEY_ACTION_DOWN, 0);
-                [keysDown addObject:@(keyCode)];
+            if (self.keyboardVisible) [self hideKeyboard]; else [self showKeyboard];
+#else
+            if (isInputingText) {
+                [keyInputField resignFirstResponder]; isInputingText = NO;
             } else {
-                LiSendKeyboardEvent(keyCode, KEY_ACTION_UP, 0);
-                [keysDown removeObject:@(keyCode)];
+                keyInputField.text = @"0"; [keyInputField becomeFirstResponder]; isInputingText = YES;
             }
-        }
-        else {
-            LiSendKeyboardEvent(keyCode, KEY_ACTION_DOWN, 0);
-            usleep(50 * 1000);
-            LiSendKeyboardEvent(keyCode, KEY_ACTION_UP, 0);
+#endif
         }
     }
 }
+
+#if !TARGET_OS_TV
+- (BOOL)isKeyboardVisible { return keyInputField.isFirstResponder; }
+
+- (KeyboardShortcutModifiers)heldKeyboardModifiers {
+    KeyboardShortcutModifiers modifiers = 0;
+    if ([keysDown containsObject:@0xA2]) modifiers |= KeyboardShortcutControl;
+    if ([keysDown containsObject:@0xA4]) modifiers |= KeyboardShortcutAlt;
+    if ([keysDown containsObject:@0xA0]) modifiers |= KeyboardShortcutShift;
+    if ([keysDown containsObject:@0x5B]) modifiers |= KeyboardShortcutWindows;
+    return modifiers;
+}
+
+- (void)showKeyboard {
+    if (self.keyboardVisible || !keyInputField) return;
+    if (!_keyboardToolbar) {
+        _keyboardToolbar = [[KeyboardShortcutBar alloc] initWithShortcutStore:[[KeyboardShortcutStore alloc] init]];
+        __weak typeof(self) weakSelf = self;
+        _keyboardToolbar.dismissHandler = ^{ [weakSelf hideKeyboard]; };
+        _keyboardToolbar.shortcutHandler = ^(KeyboardShortcut *shortcut) { [weakSelf sendKeyboardShortcut:shortcut]; };
+        _keyboardToolbar.keyHandler = ^(unsigned short code, BOOL toggleable) {
+            StreamView *stream = weakSelf; if (!stream) return;
+            if (toggleable) {
+                BOOL down = ![stream->keysDown containsObject:@(code)];
+                if (down) [stream->keysDown addObject:@(code)]; else [stream->keysDown removeObject:@(code)];
+                [KeyboardSupport sendVirtualKey:code down:down modifiers:[stream heldKeyboardModifiers]];
+                stream->_keyboardToolbar.activeModifiers = [stream heldKeyboardModifiers];
+            } else {
+                [KeyboardSupport sendVirtualKey:code modifiers:[stream heldKeyboardModifiers]];
+            }
+        };
+        keyInputField.inputAccessoryView = _keyboardToolbar;
+    }
+    keyInputField.text = @"0";
+    [keyInputField becomeFirstResponder];
+    if (keyInputField.undoManager.isUndoRegistrationEnabled) [keyInputField.undoManager disableUndoRegistration];
+}
+
+- (void)hideKeyboard {
+    [keyInputField resignFirstResponder];
+    [self becomeFirstResponder];
+}
+
+- (void)sendKeyboardShortcut:(KeyboardShortcut *)shortcut {
+    // A named shortcut has its own modifier state; release sticky toolbar keys
+    // before sending it so a previously held modifier cannot alter the chord.
+    for (NSNumber *code in [keysDown copy]) [KeyboardSupport sendVirtualKey:code.unsignedShortValue down:NO modifiers:0];
+    [keysDown removeAllObjects]; _keyboardToolbar.activeModifiers = 0;
+    [KeyboardSupport sendShortcut:shortcut];
+}
+#endif
 
 - (BOOL)handleMouseButtonEvent:(int)buttonAction forTouches:(NSSet *)touches withEvent:(UIEvent *)event {
 #if !TARGET_OS_TV
@@ -878,9 +858,25 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 
 - (void)textFieldDidEndEditing:(UITextField *)textField {
     for (NSNumber* keyCode in keysDown) {
+#if !TARGET_OS_TV
+        [KeyboardSupport sendVirtualKey:keyCode.unsignedShortValue down:NO modifiers:0];
+#else
         LiSendKeyboardEvent([keyCode shortValue], KEY_ACTION_UP, 0);
+#endif
     }
     [keysDown removeAllObjects];
+    isInputingText = NO;
+#if !TARGET_OS_TV
+    _keyboardToolbar.activeModifiers = 0;
+    if (self.keyboardVisibilityChanged) self.keyboardVisibilityChanged(NO);
+#endif
+}
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField {
+    isInputingText = YES;
+#if !TARGET_OS_TV
+    if (self.keyboardVisibilityChanged) self.keyboardVisibilityChanged(YES);
+#endif
 }
 
 - (void)onKeyboardPressed:(UITextField *)textField {

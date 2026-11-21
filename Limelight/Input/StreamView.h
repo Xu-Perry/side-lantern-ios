@@ -10,6 +10,9 @@
 #import "OnScreenControls.h"
 #import "Moonlight-Swift.h"
 #import "StreamConfiguration.h"
+#if !TARGET_OS_TV
+@class KeyboardShortcut;
+#endif
 
 @protocol UserInteractionDelegate <NSObject>
 
@@ -39,6 +42,11 @@
 #endif
 
 #if !TARGET_OS_TV
+- (void)showKeyboard;
+- (void)hideKeyboard;
+@property (nonatomic, readonly, getter=isKeyboardVisible) BOOL keyboardVisible;
+@property (nonatomic, copy) void (^keyboardVisibilityChanged)(BOOL visible);
+- (void)sendKeyboardShortcut:(KeyboardShortcut *)shortcut;
 - (void) updateCursorLocation:(CGPoint)location isMouse:(BOOL)isMouse;
 #endif
 

@@ -7,6 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AABB00122026112100000003 /* KeyboardShortcut.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00122026112100000002; };
+		AABB00132026112100000003 /* KeyboardShortcutBar.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00132026112100000002; };
+		AABB00142026112100000003 /* KeyboardShortcutsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00142026112100000002; };
+		AABB0015202611210000000A /* KeyboardShortcuts.strings in Resources */ = {isa = PBXBuildFile; fileRef = AABB00152026112100000009; };
+		AABB00112026112100000003 /* SideLanternNavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00112026112100000002; };
+		735E9624D5C40E8C8C7C4646 /* Devices.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B2C0F6454DE2F7E76A1D559; };
+		DF738CE1A94B68D90FDE4563 /* DeviceBrowserViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D3F41CFB6A1B678B2D5DACA; };
+		1DCBE95985C0835D2A710B4A /* FileTransferPreview.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B66C6D0D77B18CCC31939E8; };
+		E54180A7C3A5C1B314D31531 /* FileTransferProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 013535CE6CCEDCB92D62737C; };
+		5E2D3B730D56D27E5F4A69AA /* FileTransferClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 378C6820C75FCC220EC6FE11; };
+		BA4CEEC8850892FE3C4B7D75 /* FileTransferManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 808D4E48CAD045040D174CC3; };
+		2AB9F82EB6E201063DBFECA8 /* FileTransferViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 602F5B2516CAC41A0F8F981D; };
+		501658FB1C762E5C2F4D5941 /* RemoteFilesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CC432DA58B6CA386C4081E0B; };
+		3E1C47883C44B1F69FBC00AA /* FileTransfer.strings in Resources */ = {isa = PBXBuildFile; fileRef = FE6C4B53F60E01B2BD0A3BD4; };
 		AABB00052026112000000003 /* StreamSettingsButton.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00052026112000000002 /* StreamSettingsButton.m */; };
 		AABB00042026112000000003 /* SettingsSidebar.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00042026112000000002 /* SettingsSidebar.m */; };
 		AABB00062026112000000003 /* StreamSettingsContainerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AABB00062026112000000002 /* StreamSettingsContainerViewController.m */; };
@@ -186,6 +200,34 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AABB00122026112100000001 /* KeyboardShortcut.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardShortcut.h; sourceTree = "<group>"; };
+		AABB00122026112100000002 /* KeyboardShortcut.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardShortcut.m; sourceTree = "<group>"; };
+		AABB00132026112100000001 /* KeyboardShortcutBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardShortcutBar.h; sourceTree = "<group>"; };
+		AABB00132026112100000002 /* KeyboardShortcutBar.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardShortcutBar.m; sourceTree = "<group>"; };
+		AABB00142026112100000001 /* KeyboardShortcutsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardShortcutsViewController.h; sourceTree = "<group>"; };
+		AABB00142026112100000002 /* KeyboardShortcutsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardShortcutsViewController.m; sourceTree = "<group>"; };
+		AABB00152026112100000007 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/KeyboardShortcuts.strings; sourceTree = "<group>"; };
+		AABB00152026112100000008 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/KeyboardShortcuts.strings"; sourceTree = "<group>"; };
+		AABB00112026112100000001 /* SideLanternNavigationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SideLanternNavigationController.h; sourceTree = "<group>"; };
+		AABB00112026112100000002 /* SideLanternNavigationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SideLanternNavigationController.m; sourceTree = "<group>"; };
+		242C6D3209B98CF3E5E0A5AD /* zh-Hans.lproj/Devices.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Devices.strings"; sourceTree = "<group>"; };
+		D757BF8AFCB4D07230333F8E /* en.lproj/Devices.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en"; path = "en.lproj/Devices.strings"; sourceTree = "<group>"; };
+		8D3F41CFB6A1B678B2D5DACA /* DeviceBrowserViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceBrowserViewController.m; sourceTree = "<group>"; };
+		DF366E04097787C62D04990E /* DeviceBrowserViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceBrowserViewController.h; sourceTree = "<group>"; };
+		853FE372BF4780E004405AFE /* FileTransferPreview.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FileTransferPreview.h; path = "Files/FileTransferPreview.h"; sourceTree = "<group>"; };
+		9B66C6D0D77B18CCC31939E8 /* FileTransferPreview.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FileTransferPreview.m; path = "Files/FileTransferPreview.m"; sourceTree = "<group>"; };
+		4B4F7E47C520D995BE5525CA /* Files/FileTransferProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "FileTransferProtocol.h"; path = "Files/FileTransferProtocol.h"; sourceTree = "<group>"; };
+		013535CE6CCEDCB92D62737C /* Files/FileTransferProtocol.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "FileTransferProtocol.m"; path = "Files/FileTransferProtocol.m"; sourceTree = "<group>"; };
+		1CC74230CB585A87EE420C9F /* Files/FileTransferClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "FileTransferClient.h"; path = "Files/FileTransferClient.h"; sourceTree = "<group>"; };
+		378C6820C75FCC220EC6FE11 /* Files/FileTransferClient.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "FileTransferClient.m"; path = "Files/FileTransferClient.m"; sourceTree = "<group>"; };
+		3B0570EEEF518EBBAC164EFF /* Files/FileTransferManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "FileTransferManager.h"; path = "Files/FileTransferManager.h"; sourceTree = "<group>"; };
+		808D4E48CAD045040D174CC3 /* Files/FileTransferManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "FileTransferManager.m"; path = "Files/FileTransferManager.m"; sourceTree = "<group>"; };
+		E5BF06DF277BC57343D10741 /* ViewControllers/FileTransferViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "FileTransferViewController.h"; path = "ViewControllers/FileTransferViewController.h"; sourceTree = "<group>"; };
+		602F5B2516CAC41A0F8F981D /* ViewControllers/FileTransferViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "FileTransferViewController.m"; path = "ViewControllers/FileTransferViewController.m"; sourceTree = "<group>"; };
+		1983F338C208D369D971FAD7 /* ViewControllers/RemoteFilesViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "RemoteFilesViewController.h"; path = "ViewControllers/RemoteFilesViewController.h"; sourceTree = "<group>"; };
+		CC432DA58B6CA386C4081E0B /* ViewControllers/RemoteFilesViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "RemoteFilesViewController.m"; path = "ViewControllers/RemoteFilesViewController.m"; sourceTree = "<group>"; };
+		0E57349816EA80762E67F8A3 /* en.lproj/FileTransfer.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en"; path = "en.lproj/FileTransfer.strings"; sourceTree = "<group>"; };
+		E5A56F16FD0AA122680C8EC0 /* zh-Hans.lproj/FileTransfer.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/FileTransfer.strings"; sourceTree = "<group>"; };
 		AABB00052026112000000001 /* StreamSettingsButton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamSettingsButton.h; sourceTree = "<group>"; };
 		AABB00052026112000000002 /* StreamSettingsButton.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamSettingsButton.m; sourceTree = "<group>"; };
 		AABB00042026112000000001 /* SettingsSidebar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsSidebar.h; sourceTree = "<group>"; };
@@ -405,6 +447,26 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		67549774A484AAC7EF013469 /* File Transfer */ = {
+			isa = PBXGroup;
+			children = (
+				853FE372BF4780E004405AFE /* FileTransferPreview.h */,
+				9B66C6D0D77B18CCC31939E8 /* FileTransferPreview.m */,
+				4B4F7E47C520D995BE5525CA /* FileTransferProtocol.h */,
+				013535CE6CCEDCB92D62737C /* FileTransferProtocol.m */,
+				1CC74230CB585A87EE420C9F /* FileTransferClient.h */,
+				378C6820C75FCC220EC6FE11 /* FileTransferClient.m */,
+				3B0570EEEF518EBBAC164EFF /* FileTransferManager.h */,
+				808D4E48CAD045040D174CC3 /* FileTransferManager.m */,
+				E5BF06DF277BC57343D10741 /* FileTransferViewController.h */,
+				602F5B2516CAC41A0F8F981D /* FileTransferViewController.m */,
+				1983F338C208D369D971FAD7 /* RemoteFilesViewController.h */,
+				CC432DA58B6CA386C4081E0B /* RemoteFilesViewController.m */,
+				FE6C4B53F60E01B2BD0A3BD4 /* FileTransfer.strings */,
+			);
+			name = "File Transfer";
+			sourceTree = "<group>";
+		};
 		9896219423D15C2900211983 /* X1Kit */ = {
 			isa = PBXGroup;
 			children = (
@@ -485,7 +547,9 @@
 		FB290CF919B2C406004C83CF /* Moonlight */ = {
 			isa = PBXGroup;
 			children = (
+				0B2C0F6454DE2F7E76A1D559 /* Devices.strings */,
 				D4746EEA1CBC740C006FB401 /* Moonlight-Bridging-Header.h */,
+				67549774A484AAC7EF013469 /* File Transfer */,
 				FB89460419F646E200339C8A /* Crypto */,
 				FB89460919F646E200339C8A /* Input */,
 				FB89460E19F646E200339C8A /* Network */,
@@ -522,6 +586,7 @@
 				FB290CFB19B2C406004C83CF /* Limelight-Info.plist */,
 				FB290CFC19B2C406004C83CF /* InfoPlist.strings */,
 				AABB00012026112000000009 /* StreamTarget.strings */,
+				AABB00152026112100000009 /* KeyboardShortcuts.strings */,
 				FB290CFF19B2C406004C83CF /* main.m */,
 				FB290D0119B2C406004C83CF /* Limelight-Prefix.pch */,
 			);
@@ -544,6 +609,10 @@
 		FB89460919F646E200339C8A /* Input */ = {
 			isa = PBXGroup;
 			children = (
+				AABB00122026112100000001 /* KeyboardShortcut.h */,
+				AABB00122026112100000002 /* KeyboardShortcut.m */,
+				AABB00132026112100000001 /* KeyboardShortcutBar.h */,
+				AABB00132026112100000002 /* KeyboardShortcutBar.m */,
 				FB89460A19F646E200339C8A /* ControllerSupport.h */,
 				FB89460B19F646E200339C8A /* ControllerSupport.m */,
 				FB89460C19F646E200339C8A /* StreamView.h */,
@@ -614,6 +683,12 @@
 		FB89462319F646E200339C8A /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				AABB00142026112100000001 /* KeyboardShortcutsViewController.h */,
+				AABB00142026112100000002 /* KeyboardShortcutsViewController.m */,
+				AABB00112026112100000001 /* SideLanternNavigationController.h */,
+				AABB00112026112100000002 /* SideLanternNavigationController.m */,
+				DF366E04097787C62D04990E /* DeviceBrowserViewController.h */,
+				8D3F41CFB6A1B678B2D5DACA /* DeviceBrowserViewController.m */,
 				FBD3495119FF36FB002D2A60 /* SWRevealViewController.h */,
 				FBD3495219FF36FB002D2A60 /* SWRevealViewController.m */,
 				FB89462419F646E200339C8A /* MainFrameViewController.h */,
@@ -882,6 +957,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AABB0015202611210000000A /* KeyboardShortcuts.strings in Resources */,
+				735E9624D5C40E8C8C7C4646 /* Devices.strings in Resources */,
+				3E1C47883C44B1F69FBC00AA /* FileTransfer.strings in Resources */,
 				FB290E7919B37D81004C83CF /* iPad.storyboard in Resources */,
 				FB290CFE19B2C406004C83CF /* InfoPlist.strings in Resources */,
 				AABB0001202611200000000A /* StreamTarget.strings in Resources */,
@@ -954,6 +1032,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AABB00122026112100000003 /* KeyboardShortcut.m in Sources */,
+				AABB00132026112100000003 /* KeyboardShortcutBar.m in Sources */,
+				AABB00142026112100000003 /* KeyboardShortcutsViewController.m in Sources */,
+				AABB00112026112100000003 /* SideLanternNavigationController.m in Sources */,
+				DF738CE1A94B68D90FDE4563 /* DeviceBrowserViewController.m in Sources */,
+				1DCBE95985C0835D2A710B4A /* FileTransferPreview.m in Sources */,
+				E54180A7C3A5C1B314D31531 /* FileTransferProtocol.m in Sources */,
+				5E2D3B730D56D27E5F4A69AA /* FileTransferClient.m in Sources */,
+				BA4CEEC8850892FE3C4B7D75 /* FileTransferManager.m in Sources */,
+				2AB9F82EB6E201063DBFECA8 /* FileTransferViewController.m in Sources */,
+				501658FB1C762E5C2F4D5941 /* RemoteFilesViewController.m in Sources */,
 				AABB00052026112000000003 /* StreamSettingsButton.m in Sources */,
 				AABB00042026112000000003 /* SettingsSidebar.m in Sources */,
 				AABB00062026112000000003 /* StreamSettingsContainerViewController.m in Sources */,
@@ -1033,6 +1122,9 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		AABB00152026112100000009 /* KeyboardShortcuts.strings */ = {isa = PBXVariantGroup; children = (AABB00152026112100000007, AABB00152026112100000008); name = KeyboardShortcuts.strings; sourceTree = "<group>"; };
+		0B2C0F6454DE2F7E76A1D559 /* Devices.strings */ = {isa = PBXVariantGroup; children = (D757BF8AFCB4D07230333F8E, 242C6D3209B98CF3E5E0A5AD); name = Devices.strings; sourceTree = "<group>"; };
+		FE6C4B53F60E01B2BD0A3BD4 /* FileTransfer.strings */ = {isa = PBXVariantGroup; children = (0E57349816EA80762E67F8A3, E5A56F16FD0AA122680C8EC0); name = FileTransfer.strings; sourceTree = "<group>"; };
 		AABB00012026112000000009 /* StreamTarget.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1291,6 +1383,10 @@
 		FB290D2119B2C406004C83CF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					SIDELANTERN_ALLOW_WAN_HOSTS,
+				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1343,6 +1439,10 @@
 		FB290D2219B2C406004C83CF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					SIDELANTERN_ALLOW_WAN_HOSTS,
+				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";

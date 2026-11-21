@@ -251,6 +251,25 @@
     return [self createRequestFromString:url timeout:NORMAL_TIMEOUT_SEC];
 }
 
+- (NSURL *)fileTransferBaseURL {
+    if (!_serverCert || ![self ensureHttpsUrlPopulated:NO]) return nil;
+    return [NSURL URLWithString:_baseHTTPSURL];
+}
+
+- (NSURLSession *)newFileTransferSession {
+    NSURLSessionConfiguration *configuration = NSURLSessionConfiguration.ephemeralSessionConfiguration;
+    configuration.URLCache = nil;
+    configuration.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
+    configuration.timeoutIntervalForRequest = 15;
+    return [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:nil];
+}
+
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task willPerformHTTPRedirection:(NSHTTPURLResponse *)response
+    newRequest:(NSURLRequest *)request completionHandler:(void (^)(NSURLRequest *))completionHandler {
+    // File payloads stay on the paired endpoint, including redirects to HTTP.
+    completionHandler([task.originalRequest.URL.path hasPrefix:@"/sidelantern/v1/files"] ? nil : request);
+}
+
 - (NSURLRequest *)newManualVideoRequestForSession:(NSString *)sessionIdentifier settings:(ManualVideoSettings *)settings {
     if (_serverCert == nil || ![self ensureHttpsUrlPopulated:NO]) return nil;
     return ManualVideoRequest([NSURL URLWithString:_baseHTTPSURL], sessionIdentifier, settings);
